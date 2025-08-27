@@ -5,7 +5,7 @@
 ## Usage: launch
 ## Example: "ddev launch" or "ddev launch 13" or "ddev launch 13 /typo3"
 
-. .ddev/.typo3-setup/scripts/utils.sh
+. .ddev/.setup/scripts/utils.sh
 
 if [ "${DDEV_PROJECT_STATUS}" != "running" ] && [ -z "$no_recursion" ]; then
     message yellow "Project ${DDEV_PROJECT} is not running, starting it"

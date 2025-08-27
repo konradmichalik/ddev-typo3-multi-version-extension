@@ -1,11 +1,10 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-## #ddev-generated
 ## Description: Exec command for TYPO3 instance 12.
 ## Usage: 12
 ## Example: "ddev 12 composer du -o" or "ddev 12 typo3 cache:flush"
 
-. .ddev/.typo3-setup/scripts/utils.sh
+. .ddev/.setup/scripts/utils.sh
 
 command=$@
 version=12
