@@ -50,24 +50,32 @@ To install TYPO3 instances, use the following command:
 ```shell
 ddev install all
 # or for a specific version
-ddev install 11
+ddev install 12
 ```
+
+![Screencast](./images/screencast.gif)
+
+For a detailed console output, use the following command:
+
+```shell
+ddev install 12 -v
+````
 
 ## ⚙ Configuration
 
 By default, a blank TYPO3 instance will be installed for each version. They are only two extensions installed:
 
 - your **main extension** from the project root (symlinked)
-- a demo **sitepackage extension** in from the `Tests/.typo3-setup/packages` directory
+- a demo **sitepackage extension** in from the `Tests/Acceptance/Fixtures/packages` directory
 
-Use this sitepackage to test the features of your main extension. You can adjust it to your needs in `Tests/.typo3-setup/packages/sitepackage/`.
+Use this sitepackage to test the features of your main extension. You can adjust it to your needs in `Tests/Acceptance/Fixtures/packages/sitepackage/`.
 
-If you need more extensions for your setup, you can place them in the `Tests/.typo3-setup/packages` directory or adjust the `ddev install` command. Within the e.g. the [.install-12](commands/web/.install-12) file, you can adjust the `composer require` command to fit your needs.
+If you need more extensions for your setup, you can place them in the `Tests/Acceptance/Fixtures/packages` directory or adjust the `ddev install` command. Within the e.g. the [.install-12](commands/web/.install-12) file, you can adjust the `composer require` command to fit your needs.
 
 > [!NOTE]
 > You may not need all TYPO3 versions? You can remove the unwanted versions from the `TYPO3_VERSIONS` variable in [.ddev/docker-compose.typo3-setup.yaml](docker-compose.typo3-setup.yaml).
 
-If you need additional data for the automatic installation process, place a TYPO3 export file in the `Tests/.typo3-setup/data` directory.
+If you need additional data for the automatic installation process, place TYPO3 xml export files or sql files in the `Tests/Acceptance/Fixtures/` directory.
 
 ## 📊 Usage
 

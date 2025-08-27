@@ -9,9 +9,9 @@ pre_install_actions:
     fi
 
 project_files:
-  - .typo3-setup/scripts/utils.sh
-  - .typo3-setup/templates/index.php
-  - .typo3-setup/Tests/.typo3-setup/
+  - .setup/scripts/utils.sh
+  - .setup/templates/index.php
+  - .setup/Tests/Acceptance/Fixtures/
   - apache/10.conf
   - apache/20.conf
   - commands/host/launch
@@ -76,15 +76,15 @@ post_install_actions:
       - 13.${DDEV_PROJECT}
     hooks:
        post-start:
-        - exec: mkdir -p /var/www/html/.Build/ && cp /var/www/html/.ddev/.typo3-setup/templates/* /var/www/html/.Build/
+        - exec: mkdir -p /var/www/html/.Build/ && cp /var/www/html/.ddev/.setup/templates/* /var/www/html/.Build/
 
   - |
     #ddev-description:Create Tests folder
-    if [ ! -d "${DDEV_APPROOT}/Tests/.typo3-setup" ]; then
+    if [ ! -d "${DDEV_APPROOT}/Tests/.setup" ]; then
       mkdir -p ${DDEV_APPROOT}/Tests
-      mv ${DDEV_APPROOT}/.ddev/.typo3-setup/Tests/.typo3-setup ${DDEV_APPROOT}/Tests/
-      rm -rf ${DDEV_APPROOT}/.ddev/.typo3-setup/Tests
-      echo "Created Tests/.typo3-setup folder"
+      mv ${DDEV_APPROOT}/.ddev/.setup/Tests/Acceptance ${DDEV_APPROOT}/Tests/
+      rm -rf ${DDEV_APPROOT}/.ddev/.setup/Tests
+      echo "Created Tests/.setup folder"
     fi
 
   - |
@@ -113,5 +113,4 @@ post_install_actions:
 
 removal_actions:
   - rm ${DDEV_APPROOT}/.ddev/config.typo3-setup.yaml
-  - rm -f ${DDEV_APPROOT}/.ddev/.typo3-setup/
-  - rm -rf ${DDEV_APPROOT}/Tests/.typo3-setup/
+  - rm -f ${DDEV_APPROOT}/.ddev/.setup/
