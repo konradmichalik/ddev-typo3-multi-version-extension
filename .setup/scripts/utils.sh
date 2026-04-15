@@ -165,6 +165,8 @@ function post_setup() {
       post_setup_12
     elif [ "$VERSION" == "13" ]; then
       post_setup_13
+    elif [ "$VERSION" == "14" ]; then
+      post_setup_14
     fi
   _done
 
@@ -396,6 +398,17 @@ function post_setup_12 {
 # It creates the TYPO3 database, sets up TYPO3 by running the installation setup,
 # configures TYPO3 settings, and modifies configuration files to enable deprecations.
 function post_setup_13 {
+  mysql -h db -u root -p"root" -e "CREATE DATABASE $DATABASE;"
+  $TYPO3_BIN  setup -n --dbname=$DATABASE --password=$TYPO3_DB_PASSWORD --create-site="https://${VERSION}.${EXTENSION_NAME}.ddev.site" --admin-user-password=$TYPO3_SETUP_ADMIN_PASSWORD
+  setup_typo3
+
+  sed -i "/'deprecations'/,/^[[:space:]]*'disabled' => true,/s/'disabled' => true,/'disabled' => false,/" /var/www/html/.Build/$VERSION/config/system/settings.php
+}
+
+# Function to perform post-setup tasks for TYPO3 version 14.
+# It creates the TYPO3 database, sets up TYPO3 by running the installation setup,
+# configures TYPO3 settings, and modifies configuration files to enable deprecations.
+function post_setup_14 {
   mysql -h db -u root -p"root" -e "CREATE DATABASE $DATABASE;"
   $TYPO3_BIN  setup -n --dbname=$DATABASE --password=$TYPO3_DB_PASSWORD --create-site="https://${VERSION}.${EXTENSION_NAME}.ddev.site" --admin-user-password=$TYPO3_SETUP_ADMIN_PASSWORD
   setup_typo3
