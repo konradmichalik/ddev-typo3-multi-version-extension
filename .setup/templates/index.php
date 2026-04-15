@@ -1,7 +1,7 @@
 <?php
 $extensionKey = getenv('EXTENSION_NAME');
-$typo3AdminUser = getenv('TYPO3_INSTALL_ADMIN_USER');
-$typo3AdminPassword = getenv('TYPO3_INSTALL_ADMIN_PASSWORD');
+$typo3AdminUser = getenv('TYPO3_SETUP_ADMIN_USERNAME');
+$typo3AdminPassword = getenv('TYPO3_SETUP_ADMIN_PASSWORD');
 $supportedVersions = explode(' ', getenv('TYPO3_VERSIONS'));
 
 // Check if composer.json exists

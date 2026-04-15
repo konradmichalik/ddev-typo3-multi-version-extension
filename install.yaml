@@ -18,9 +18,11 @@ project_files:
   - commands/web/.install-11
   - commands/web/.install-12
   - commands/web/.install-13
+  - commands/web/.install-14
   - commands/web/11
   - commands/web/12
   - commands/web/13
+  - commands/web/14
   - commands/web/all
   - commands/web/install
   - docker-compose.typo3-setup.yaml
@@ -74,6 +76,7 @@ post_install_actions:
       - 11.${DDEV_PROJECT}
       - 12.${DDEV_PROJECT}
       - 13.${DDEV_PROJECT}
+      - 14.${DDEV_PROJECT}
     hooks:
        post-start:
         - exec: mkdir -p /var/www/html/.Build/ && cp /var/www/html/.ddev/.setup/templates/* /var/www/html/.Build/
@@ -109,7 +112,7 @@ post_install_actions:
     echo "✓ TYPO3 multi-version extension setup complete."
     echo "You can now run 'ddev restart' to start the environment and 'ddev install all' to install the TYPO3 instances."
     echo "Launch the intro page with 'ddev launch' or open ${DDEV_PRIMARY_URL}."
-    echo "For more information, see the https://github.com/jackd248/ddev-typo3-multi-version-extension/blob/main/README.md file."
+    echo "For more information, see the https://github.com/konradmichalik/ddev-typo3-multi-version-extension/blob/main/README.md file."
 
 removal_actions:
   - rm ${DDEV_APPROOT}/.ddev/config.typo3-setup.yaml
