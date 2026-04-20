@@ -174,6 +174,7 @@ function post_setup() {
     import_xml_data
     import_sql_data
     import_site_configs
+    run_fixture_scripts
   _done
   _progress " ├─ Update TYPO3"
     update_typo3
@@ -392,6 +393,22 @@ function import_site_configs() {
             if [ -f "$TARGET_BASE/$SITE_NAME/config.yaml" ]; then
                 sed -i "s/VERSION_PLACEHOLDER/$VERSION/g" "$TARGET_BASE/$SITE_NAME/config.yaml"
             fi
+        fi
+    done
+}
+
+# Function to run shell script fixtures from Tests/Acceptance/Fixtures/.
+# Executes any *.sh scripts found in the fixture directory. Failures are
+# logged but do not abort the setup, so external services (e.g. Solr,
+# Elasticsearch) that are not yet reachable during early provisioning
+# do not break the installation.
+function run_fixture_scripts() {
+    FIXTURE_DIR="/var/www/html/Tests/Acceptance/Fixtures"
+
+    for SCRIPT in "$FIXTURE_DIR"/*.sh; do
+        if [ -f "$SCRIPT" ]; then
+            message yellow "Running fixture script $(basename "$SCRIPT")..."
+            bash "$SCRIPT" || message red "Fixture script $(basename "$SCRIPT") failed (continuing)"
         fi
     done
 }
