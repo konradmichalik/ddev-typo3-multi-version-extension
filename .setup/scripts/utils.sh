@@ -173,6 +173,7 @@ function post_setup() {
   _progress " ├─ Import data"
     import_xml_data
     import_sql_data
+    run_fixture_scripts
   _done
   _progress " ├─ Update TYPO3"
     update_typo3
@@ -363,6 +364,22 @@ function import_sql_data() {
             mysql -h db -u root -p"root" $DATABASE < "$DATA_FILE"
         else
           message yellow "No SQL files found in $FIXTURE_DIR. Import will be skipped."
+        fi
+    done
+}
+
+# Function to run shell script fixtures from Tests/Acceptance/Fixtures/.
+# Executes any *.sh scripts found in the fixture directory. Failures are
+# logged but do not abort the setup, so external services (e.g. Solr,
+# Elasticsearch) that are not yet reachable during early provisioning
+# do not break the installation.
+function run_fixture_scripts() {
+    FIXTURE_DIR="/var/www/html/Tests/Acceptance/Fixtures"
+
+    for SCRIPT in "$FIXTURE_DIR"/*.sh; do
+        if [ -f "$SCRIPT" ]; then
+            message yellow "Running fixture script $(basename "$SCRIPT")..."
+            bash "$SCRIPT" || message red "Fixture script $(basename "$SCRIPT") failed (continuing)"
         fi
     done
 }
