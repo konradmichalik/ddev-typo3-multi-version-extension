@@ -379,11 +379,7 @@ function import_site_configs() {
         return
     fi
 
-    if [ "$VERSION" == "11" ] || [ "$VERSION" == "12" ]; then
-        TARGET_BASE="/var/www/html/.Build/$VERSION/public/typo3conf/sites"
-    else
-        TARGET_BASE="/var/www/html/.Build/$VERSION/config/sites"
-    fi
+    TARGET_BASE="/var/www/html/.Build/$VERSION/config/sites"
 
     mkdir -p "$TARGET_BASE"
 
