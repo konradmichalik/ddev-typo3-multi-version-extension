@@ -173,6 +173,7 @@ function post_setup() {
   _progress " ├─ Import data"
     import_xml_data
     import_sql_data
+    import_site_configs
     run_fixture_scripts
   _done
   _progress " ├─ Update TYPO3"
@@ -364,6 +365,34 @@ function import_sql_data() {
             mysql -h db -u root -p"root" $DATABASE < "$DATA_FILE"
         else
           message yellow "No SQL files found in $FIXTURE_DIR. Import will be skipped."
+        fi
+    done
+}
+
+# Function to import site configuration YAML fixtures.
+# It copies each directory under Tests/Acceptance/Fixtures/sites/ to the
+# TYPO3 site configuration path for the current version, replacing
+# VERSION_PLACEHOLDER with the actual version number in the config.yaml.
+function import_site_configs() {
+    FIXTURE_DIR="/var/www/html/Tests/Acceptance/Fixtures/sites"
+
+    if [ ! -d "$FIXTURE_DIR" ]; then
+        return
+    fi
+
+    TARGET_BASE="/var/www/html/.Build/$VERSION/config/sites"
+
+    mkdir -p "$TARGET_BASE"
+
+    for SITE_DIR in "$FIXTURE_DIR"/*/; do
+        if [ -d "$SITE_DIR" ]; then
+            SITE_NAME=$(basename "$SITE_DIR")
+            message yellow "Importing site config $SITE_NAME..."
+            mkdir -p "$TARGET_BASE/$SITE_NAME"
+            cp -r "$SITE_DIR"* "$TARGET_BASE/$SITE_NAME/"
+            if [ -f "$TARGET_BASE/$SITE_NAME/config.yaml" ]; then
+                sed -i "s/VERSION_PLACEHOLDER/$VERSION/g" "$TARGET_BASE/$SITE_NAME/config.yaml"
+            fi
         fi
     done
 }
