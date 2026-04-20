@@ -76,7 +76,16 @@ If you need more extensions for your setup, you can place them in the `Tests/Acc
 > [!NOTE]
 > You may not need all TYPO3 versions? You can remove the unwanted versions from the `TYPO3_VERSIONS` variable in [.ddev/docker-compose.typo3-setup.yaml](docker-compose.typo3-setup.yaml).
 
-If you need additional data for the automatic installation process, place TYPO3 xml export files or sql files in the `Tests/Acceptance/Fixtures/` directory.
+### Fixtures
+
+During installation, fixture data from `Tests/Acceptance/Fixtures/` is automatically imported. The following types are supported:
+
+| Type | Location | Description |
+|------|----------|-------------|
+| XML | `Tests/Acceptance/Fixtures/*.xml` | TYPO3 export files, imported via `impexp:import` |
+| SQL | `Tests/Acceptance/Fixtures/*.sql` | Raw SQL files, imported directly into the database |
+| Site config | `Tests/Acceptance/Fixtures/sites/<site-name>/` | Site configuration directories copied to `config/sites/`. Use `VERSION_PLACEHOLDER` in `config.yaml` to insert the TYPO3 version automatically. |
+| Shell scripts | `Tests/Acceptance/Fixtures/*.sh` | Executed during setup (failures are logged but don't abort the installation) |
 
 ## 📊 Usage
 
