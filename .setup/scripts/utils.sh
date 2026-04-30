@@ -1,14 +1,21 @@
 #!/bin/bash
 
-# Global variable to store spinner PID
+# Verbose flag — set VERBOSE=1 (or pass -v/--verbose to `ddev install`) to
+# disable the spinner and stream all command output live.
+VERBOSE="${VERBOSE:-0}"
+
+# Internal state shared between _progress, _done and _progress_exit_trap.
 SPINNER_PID=0
+PROGRESS_ACTIVE=0
+PROGRESS_LOG=""
+PROGRESS_LABEL=""
 
 # Function to display a spinner at the current cursor position (simple colored style)
 function _spinner() {
     local chars="|/-\\"
     local delay=0.1
     local i=0
-    
+
     while true; do
         printf "\b\e[36m%c\e[0m" "${chars:$i:1}"
         ((i++))
@@ -20,37 +27,87 @@ function _spinner() {
 }
 
 function _progress() {
+    PROGRESS_LABEL="$1"
     printf "%s... " "$1"
-    # Check if we're in CI environment or non-interactive terminal
+    # Spinner mode only in interactive terminals outside CI and verbose runs.
     if [[ "$VERBOSE" -eq 0 ]] && [[ -z "$CI" ]] && [[ -z "$GITHUB_ACTIONS" ]] && [[ -z "$GITLAB_CI" ]] && [[ -z "$JENKINS_URL" ]] && [[ -t 1 ]]; then
-      # Print initial space for spinner
+      PROGRESS_LOG="$(mktemp)"
       printf " "
-      # Start spinner in background at current position
       _spinner &
       SPINNER_PID=$!
-      # Save current stdout/stderr
+      # Save stdout/stderr, capture command output to a logfile so we can
+      # replay it on failure instead of swallowing it into /dev/null.
       exec 3>&1 4>&2
-      exec >/dev/null 2>&1
+      exec >"$PROGRESS_LOG" 2>&1
+      PROGRESS_ACTIVE=1
     else
+      PROGRESS_LOG=""
       printf "\n"
     fi
 }
 
+# Stop the spinner (if running) and restore the original stdout/stderr file
+# descriptors. Idempotent — safe to call when no progress region is active.
+function _stop_spinner() {
+    [ $PROGRESS_ACTIVE -eq 1 ] || return 0
+    kill $SPINNER_PID 2>/dev/null || true
+    wait $SPINNER_PID 2>/dev/null || true
+    SPINNER_PID=0
+    exec 1>&3 2>&4
+    PROGRESS_ACTIVE=0
+}
+
+# Replay the captured progress log to the user's terminal, then remove it.
+# No-op when there is no logfile (verbose / non-interactive mode).
+function _replay_progress_log() {
+    [ -n "$PROGRESS_LOG" ] && [ -f "$PROGRESS_LOG" ] || return 0
+    message red "--- Captured output (${PROGRESS_LABEL# }) ---"
+    cat "$PROGRESS_LOG"
+    message red "--- End of captured output ---"
+    rm -f "$PROGRESS_LOG"
+    PROGRESS_LOG=""
+}
+
+# Discard the captured progress log without replaying it (success path).
+function _clear_progress_log() {
+    [ -n "$PROGRESS_LOG" ] && [ -f "$PROGRESS_LOG" ] || return 0
+    rm -f "$PROGRESS_LOG"
+    PROGRESS_LOG=""
+}
+
 function _done() {
-    # Stop spinner if it was started
-    if [ $SPINNER_PID -ne 0 ]; then
-      kill $SPINNER_PID 2>/dev/null
-      wait $SPINNER_PID 2>/dev/null
-      SPINNER_PID=0
-      # Restore stdout/stderr
-      exec 1>&3 2>&4
-      # Clear any remaining color codes and replace with checkmark
+    local rc=$?
+    local had_spinner=$PROGRESS_ACTIVE
+    _stop_spinner
+
+    if [ $rc -ne 0 ]; then
+      if [ $had_spinner -eq 1 ]; then
+        printf "\b\e[0m\e[31m✘\e[39m\n"
+      else
+        printf "\e[31m✘\e[39m\n"
+      fi
+      _replay_progress_log
+      exit $rc
+    fi
+
+    if [ $had_spinner -eq 1 ]; then
       printf "\b\e[0m\e[32m✔\e[39m\n"
     else
-      # No spinner was running, just print checkmark
       printf "\e[32m✔\e[39m\n"
     fi
+    _clear_progress_log
 }
+
+# EXIT trap: surfaces errors from `set -e` aborts mid-block. Stops any running
+# spinner, restores file descriptors, and dumps the captured log so the user
+# sees the actual command output that failed.
+function _progress_exit_trap() {
+    [ $PROGRESS_ACTIVE -eq 1 ] || return 0
+    _stop_spinner
+    printf "\b\e[0m\e[31m✘\e[39m\n"
+    _replay_progress_log
+}
+trap _progress_exit_trap EXIT
 
 
 # Function to get the lowest supported TYPO3 version from the environment variable TYPO3_VERSIONS
