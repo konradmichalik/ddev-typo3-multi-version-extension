@@ -115,5 +115,5 @@ post_install_actions:
     echo "For more information, see the https://github.com/konradmichalik/ddev-typo3-multi-version-extension/blob/main/README.md file."
 
 removal_actions:
-  - rm ${DDEV_APPROOT}/.ddev/config.typo3-setup.yaml
-  - rm -f ${DDEV_APPROOT}/.ddev/.setup/
+  - rm -f ${DDEV_APPROOT}/.ddev/config.typo3-setup.yaml
+  - rm -rf ${DDEV_APPROOT}/.ddev/.setup/
