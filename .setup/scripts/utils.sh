@@ -46,16 +46,39 @@ function _progress() {
     fi
 }
 
+# Stop the spinner (if running) and restore the original stdout/stderr file
+# descriptors. Idempotent — safe to call when no progress region is active.
+function _stop_spinner() {
+    [ $PROGRESS_ACTIVE -eq 1 ] || return 0
+    kill $SPINNER_PID 2>/dev/null || true
+    wait $SPINNER_PID 2>/dev/null || true
+    SPINNER_PID=0
+    exec 1>&3 2>&4
+    PROGRESS_ACTIVE=0
+}
+
+# Replay the captured progress log to the user's terminal, then remove it.
+# No-op when there is no logfile (verbose / non-interactive mode).
+function _replay_progress_log() {
+    [ -n "$PROGRESS_LOG" ] && [ -f "$PROGRESS_LOG" ] || return 0
+    message red "--- Captured output (${PROGRESS_LABEL# }) ---"
+    cat "$PROGRESS_LOG"
+    message red "--- End of captured output ---"
+    rm -f "$PROGRESS_LOG"
+    PROGRESS_LOG=""
+}
+
+# Discard the captured progress log without replaying it (success path).
+function _clear_progress_log() {
+    [ -n "$PROGRESS_LOG" ] && [ -f "$PROGRESS_LOG" ] || return 0
+    rm -f "$PROGRESS_LOG"
+    PROGRESS_LOG=""
+}
+
 function _done() {
     local rc=$?
     local had_spinner=$PROGRESS_ACTIVE
-    if [ $PROGRESS_ACTIVE -eq 1 ]; then
-      kill $SPINNER_PID 2>/dev/null || true
-      wait $SPINNER_PID 2>/dev/null || true
-      SPINNER_PID=0
-      exec 1>&3 2>&4
-      PROGRESS_ACTIVE=0
-    fi
+    _stop_spinner
 
     if [ $rc -ne 0 ]; then
       if [ $had_spinner -eq 1 ]; then
@@ -63,13 +86,7 @@ function _done() {
       else
         printf "\e[31m✘\e[39m\n"
       fi
-      if [ -n "$PROGRESS_LOG" ] && [ -f "$PROGRESS_LOG" ]; then
-        message red "--- Captured output (${PROGRESS_LABEL# }) ---"
-        cat "$PROGRESS_LOG"
-        message red "--- End of captured output ---"
-        rm -f "$PROGRESS_LOG"
-        PROGRESS_LOG=""
-      fi
+      _replay_progress_log
       exit $rc
     fi
 
@@ -78,33 +95,17 @@ function _done() {
     else
       printf "\e[32m✔\e[39m\n"
     fi
-    if [ -n "$PROGRESS_LOG" ] && [ -f "$PROGRESS_LOG" ]; then
-      rm -f "$PROGRESS_LOG"
-      PROGRESS_LOG=""
-    fi
+    _clear_progress_log
 }
 
-# EXIT trap: surfaces errors from `set -e` aborts mid-block. Restores file
-# descriptors, stops any running spinner, and dumps the captured log so the
-# user sees the actual command output that failed.
+# EXIT trap: surfaces errors from `set -e` aborts mid-block. Stops any running
+# spinner, restores file descriptors, and dumps the captured log so the user
+# sees the actual command output that failed.
 function _progress_exit_trap() {
-    local rc=$?
-    if [ $PROGRESS_ACTIVE -eq 1 ]; then
-      if [ $SPINNER_PID -ne 0 ]; then
-        kill $SPINNER_PID 2>/dev/null || true
-        wait $SPINNER_PID 2>/dev/null || true
-        SPINNER_PID=0
-      fi
-      exec 1>&3 2>&4
-      PROGRESS_ACTIVE=0
-      printf "\b\e[0m\e[31m✘\e[39m\n"
-      if [ -n "$PROGRESS_LOG" ] && [ -f "$PROGRESS_LOG" ]; then
-        message red "--- Captured output (${PROGRESS_LABEL# }) ---"
-        cat "$PROGRESS_LOG"
-        message red "--- End of captured output ---"
-        rm -f "$PROGRESS_LOG"
-      fi
-    fi
+    [ $PROGRESS_ACTIVE -eq 1 ] || return 0
+    _stop_spinner
+    printf "\b\e[0m\e[31m✘\e[39m\n"
+    _replay_progress_log
 }
 trap _progress_exit_trap EXIT
 
