@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -eo pipefail
 
 ## #ddev-generated
 . .ddev/.setup/scripts/utils.sh
