@@ -362,11 +362,13 @@ function import_sql_data() {
     for DATA_FILE in "$FIXTURE_DIR"/*.sql; do
         if [ -f "$DATA_FILE" ]; then
             message yellow "Importing $DATA_FILE..."
-            mysql -h db -u root -p"root" $DATABASE < "$DATA_FILE"
-        else
-          message yellow "No SQL files found in $FIXTURE_DIR. Import will be skipped."
+            mysql -h db -u root -p"root" "$DATABASE" < "$DATA_FILE"
         fi
     done
+
+    if ! ls "$FIXTURE_DIR"/*.sql >/dev/null 2>&1; then
+        message yellow "No SQL files found in $FIXTURE_DIR. Skipping SQL import."
+    fi
 }
 
 # Function to import site configuration YAML fixtures.
