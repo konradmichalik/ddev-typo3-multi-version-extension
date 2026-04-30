@@ -155,7 +155,7 @@ function pre_setup() {
 function post_setup() {
   prepare_acceptance_testing
 
-  cd $BASE_PATH
+  cd "$BASE_PATH" || { message red "Failed to change to $BASE_PATH"; return 1; }
   TYPO3_INSTALL_DB_DBNAME=$DATABASE
 
   _progress " ├─ Setup TYPO3"
@@ -269,7 +269,7 @@ function setup_composer() {
 # and configures various TYPO3 settings such as debug mode, error display, trusted hosts pattern,
 # mail transport, and graphics processor.
 function setup_typo3() {
-    cd $BASE_PATH
+    cd "$BASE_PATH" || { message red "Failed to change to $BASE_PATH"; return 1; }
     export TYPO3_INSTALL_DB_DBNAME=$DATABASE
     $TYPO3_BIN configuration:set 'BE/debug' 1
     $TYPO3_BIN configuration:set 'FE/debug' 1
