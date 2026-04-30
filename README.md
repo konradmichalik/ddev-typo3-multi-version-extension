@@ -18,7 +18,7 @@ ddev-typo3-multi-version-extension is a DDEV add-on that provides a multi-versio
 - TYPO3 11.5
 - TYPO3 12.4
 - TYPO3 13.4
-- TYPO3 14.2
+- TYPO3 14.3
 
 ## Requirements
 
@@ -95,6 +95,7 @@ You can launch a TYPO3 instance in your browser with the following command:
 ddev launch 11
 ddev launch 12
 ddev launch 13
+ddev launch 14
 ```
 
 If you want to open the TYPO3 backend directly, use the following command:
