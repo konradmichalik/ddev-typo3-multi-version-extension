@@ -332,7 +332,7 @@ function setup_typo3() {
     $TYPO3_BIN configuration:set 'FE/debug' 1
     $TYPO3_BIN configuration:set 'SYS/devIPmask' '*'
     $TYPO3_BIN configuration:set 'SYS/displayErrors' 1
-    $TYPO3_BIN configuration:set 'SYS/trustedHostsPattern' '.*.*'
+    $TYPO3_BIN configuration:set 'SYS/trustedHostsPattern' "$VERSION.$EXTENSION_NAME.ddev.site"
     $TYPO3_BIN configuration:set 'MAIL/transport' 'smtp'
     $TYPO3_BIN configuration:set 'MAIL/transport_smtp_server' 'localhost:1025'
     $TYPO3_BIN configuration:set 'GFX/processor' 'ImageMagick'
