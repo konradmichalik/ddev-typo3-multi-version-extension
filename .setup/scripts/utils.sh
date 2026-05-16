@@ -560,3 +560,4 @@ message() {
             ;;
     esac
 }
+export -f message
