@@ -314,7 +314,7 @@ function create_symlinks_additional_extensions() {
 # configures the TYPO3 web directory, sets up the repository for packages,
 # and allows necessary Composer plugins.
 function setup_composer() {
-    composer init --name="xima/typo3-$VERSION" --description="TYPO3 $VERSION" --no-interaction --working-dir "$BASE_PATH"
+    composer init --name="test/typo3-$VERSION" --description="TYPO3 $VERSION" --no-interaction --working-dir "$BASE_PATH"
     composer config extra.typo3/cms.web-dir public --working-dir "$BASE_PATH"
     composer config repositories.packages path 'packages/*' --working-dir "$BASE_PATH"
     composer config --no-interaction allow-plugins.typo3/cms-composer-installers true --working-dir "$BASE_PATH"
