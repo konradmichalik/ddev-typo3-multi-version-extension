@@ -85,11 +85,12 @@ post_install_actions:
 
   - |
     #ddev-description:Create Tests folder
-    if [ ! -d "${DDEV_APPROOT}/Tests/.setup" ]; then
-      mkdir -p ${DDEV_APPROOT}/Tests
-      mv ${DDEV_APPROOT}/.ddev/.setup/Tests/Acceptance ${DDEV_APPROOT}/Tests/
-      rm -rf ${DDEV_APPROOT}/.ddev/.setup/Tests
-      echo "Created Tests/.setup folder"
+    
+    if [ -d "${DDEV_APPROOT}/.ddev/.setup/Tests/Acceptance" ]; then
+      mkdir -p "${DDEV_APPROOT}/Tests/Acceptance"
+      cp -Rn "${DDEV_APPROOT}/.ddev/.setup/Tests/Acceptance/." "${DDEV_APPROOT}/Tests/Acceptance/"
+      rm -rf "${DDEV_APPROOT}/.ddev/.setup/Tests"
+      echo "Installed Acceptance test fixtures"
     fi
 
   - |
