@@ -88,6 +88,7 @@ post_install_actions:
       mkdir -p "${DDEV_APPROOT}/Tests/Acceptance"
       cp -Rn "${DDEV_APPROOT}/.ddev/.setup/Tests/Acceptance/." "${DDEV_APPROOT}/Tests/Acceptance/"
       rm -rf "${DDEV_APPROOT}/.ddev/.setup/Tests"
+      echo "Created Tests/.setup folder"
     fi
 
   - |

@@ -9,6 +9,8 @@
 #   bats ./tests/test.bats
 # To exclude release tests:
 #   bats ./tests/test.bats --filter-tags '!release'
+# To exclude the heavy end-to-end install test:
+#   bats ./tests/test.bats --filter-tags '!install'
 # For debugging:
 #   bats ./tests/test.bats --show-output-of-passing-tests --verbose-run --print-output-on-failure
 
@@ -58,6 +60,34 @@ teardown() {
   [ "${TESTDIR}" != "" ] && rm -rf ${TESTDIR}
 }
 
+# Scaffold a consumer extension that already has a Tests/Acceptance/ directory
+scaffold_with_existing_tests_dir() {
+  # Minimal consumer extension so the add-on's composer steps have a project to act on.
+  cat > composer.json <<JSON
+{
+    "name": "test/${PROJNAME}",
+    "type": "typo3-cms-extension",
+    "require": {
+        "typo3/cms-core": "^13.4"
+    },
+    "extra": {
+        "typo3/cms": {
+            "extension-key": "$(echo "${PROJNAME}" | tr '-' '_')"
+        }
+    }
+}
+JSON
+
+  # Recreate Tests/Acceptance/ dir that might exists before install.
+  mkdir -p Tests/Acceptance/Fixtures
+  touch Tests/Acceptance/Fixtures/.gitkeep
+
+  run ddev add-on get "${DIR}"
+  assert_success
+  run ddev restart -y
+  assert_success
+}
+
 @test "install from directory" {
   set -eu -o pipefail
   echo "# ddev add-on get ${DIR} with project ${PROJNAME} in $(pwd)" >&3
@@ -77,4 +107,36 @@ teardown() {
   run ddev restart -y
   assert_success
   health_checks
+}
+
+# When the consuming extension already has a Tests/Acceptance/ directory before `ddev add-on get`, the bundled
+# fixtures must land at Tests/Acceptance/Fixtures/... and NOT nested under # Tests/Acceptance/Acceptance/..
+@test "merges bundled fixtures when Tests/Acceptance already exists" {
+  set -eu -o pipefail
+  scaffold_with_existing_tests_dir
+
+  assert_file_exist "${TESTDIR}/Tests/Acceptance/Fixtures/packages/sitepackage/composer.json"
+  assert_file_not_exist "${TESTDIR}/Tests/Acceptance/Acceptance/Fixtures/packages/sitepackage/composer.json"
+}
+
+# End-to-end confirmation that the install completes with a pre-existing Tests/Acceptance/.
+# bats test_tags=install
+@test "ddev install succeeds with a pre-existing Tests/Acceptance" {
+  set -eu -o pipefail
+  if [ "${RUN_DDEV_INSTALL:-false}" != "true" ]; then
+    skip "set RUN_DDEV_INSTALL=true to run the networked 'ddev install' assertion"
+  fi
+
+  scaffold_with_existing_tests_dir
+
+  # Authenticate composer to avoid codeload rate-limit (HTTP 400) on TYPO3 subtree-split packages.
+  if [ -n "${GITHUB_TOKEN:-}" ]; then
+    run ddev config global --web-environment-add="COMPOSER_AUTH={\"github-oauth\":{\"github.com\":\"${GITHUB_TOKEN}\"}}"
+    assert_success
+    run ddev restart -y
+    assert_success
+  fi
+
+  run ddev install 13
+  assert_success
 }
