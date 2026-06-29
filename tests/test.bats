@@ -129,13 +129,15 @@ JSON
 
   scaffold_with_existing_tests_dir
 
-  # Authenticate composer to avoid codeload rate-limit (HTTP 400) on TYPO3 subtree-split packages.
-  if [ -n "${GITHUB_TOKEN:-}" ]; then
-    run ddev config global --web-environment-add="COMPOSER_AUTH={\"github-oauth\":{\"github.com\":\"${GITHUB_TOKEN}\"}}"
-    assert_success
-    run ddev restart -y
-    assert_success
-  fi
+    # Authenticate composer to avoid codeload rate-limit (HTTP 400) on TYPO3 subtree-split
+    # packages. Scope to THIS temp project (no `global`) so the token lives only in
+    # ${TESTDIR}/.ddev and is removed by teardown — never persisted to the user's global config.
+    if [ -n "${GITHUB_TOKEN:-}" ]; then
+      run ddev config --web-environment-add="COMPOSER_AUTH={\"github-oauth\":{\"github.com\":\"${GITHUB_TOKEN}\"}}"
+      assert_success
+      run ddev restart -y
+      assert_success
+    fi
 
   run ddev install 13
   assert_success
