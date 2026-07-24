@@ -195,14 +195,24 @@ function check_typo3_version() {
 #   pre_setup <TYPO3_VERSION>
 function pre_setup() {
   export VERSION=$1
-  message magenta "Install TYPO3 $VERSION"
+  export MODE="${MODE:-composer}"
+  export BASE_PATH="/var/www/html/.Build/$VERSION"
+
+  message magenta "Install TYPO3 $VERSION (${MODE})"
   _progress " ├─ Prepare environment"
-    export BASE_PATH="/var/www/html/.Build/$VERSION"
     intro_typo3
-    message blue "Pre Setup for TYPO3 $VERSION"
+    message blue "Pre Setup for TYPO3 $VERSION (${MODE})"
   _done
-  install_start
-  install_composer_packages
+
+  # Classic (non-Composer) installs rebuild the same version slot without a
+  # Composer project, so they follow a dedicated preparation path. The Composer
+  # path stays byte-for-byte identical to before.
+  if [ "$MODE" = "classic" ]; then
+    classic_install_start
+  else
+    install_start
+    install_composer_packages
+  fi
 }
 
 # Function to perform post-setup tasks for TYPO3 installation.
@@ -210,6 +220,16 @@ function pre_setup() {
 # and calls the appropriate post-setup function based on the TYPO3 version.
 # After that, it imports data and updates TYPO3.
 function post_setup() {
+  # Classic installs finalise through a dedicated path (core CLI binary,
+  # explicit extension activation, docroot-relative config). The Composer path
+  # below stays unchanged.
+  if [ "${MODE:-composer}" = "classic" ]; then
+    classic_post_setup
+    printf " └─ \033[33mTYPO3 %s (classic) setup completed!\033[0m Open: https://%s.%s.ddev.site\n" \
+           "$VERSION" "$VERSION" "$EXTENSION_NAME"
+    return
+  fi
+
   prepare_acceptance_testing
 
   cd "$BASE_PATH" || { message red "Failed to change to $BASE_PATH"; return 1; }
@@ -237,6 +257,64 @@ function post_setup() {
     update_typo3
   _done
   printf " └─ \033[33mTYPO3 $VERSION setup completed!\033[0m Open in your browser: https://$VERSION.${EXTENSION_NAME}.ddev.site\n"
+}
+
+# Function to perform post-setup tasks for a classic (non-Composer) install.
+# It runs the env-driven TYPO3 setup against the core CLI binary, activates the
+# extensions the classic way (classic mode does NOT auto-activate them),
+# applies the development configuration, imports the fixtures and updates the
+# database schema. Import and configuration helpers are reused unchanged — they
+# operate on $TYPO3_BIN and the public/ paths within the same version slot.
+function classic_post_setup() {
+  cd "$BASE_PATH/public" || { message red "Failed to change to $BASE_PATH/public"; return 1; }
+  mysql -h db -u root -proot -e "CREATE DATABASE IF NOT EXISTS $DATABASE;"
+
+  _progress " ├─ Setup TYPO3 (classic)"
+    # env-driven, reuses the existing TYPO3_DB_* / TYPO3_SETUP_* variables.
+    # In classic mode this writes to typo3conf/system/settings.php.
+    $TYPO3_BIN setup -n \
+        --dbname="$DATABASE" \
+        --password="$TYPO3_DB_PASSWORD" \
+        --admin-user-password="$TYPO3_SETUP_ADMIN_PASSWORD" \
+        --create-site="https://${VERSION}.${EXTENSION_NAME}.ddev.site"
+  _done
+
+  _progress " ├─ Activate extensions (classic)"
+    # Classic mode does NOT auto-activate extensions found in typo3conf/ext
+    # (unlike Composer mode since v11). Activation is PackageStates-based and
+    # must be done explicitly. The core CLI ships hidden commands
+    # 'extension:activate' / 'extension:deactivate' for exactly this case
+    # (verified for v11/v12 — VERIFY they still exist in v13/v14; if not,
+    # fall back to writing the PackageStates entry programmatically).
+    $TYPO3_BIN extension:activate "$EXTENSION_KEY"
+    for dir in /var/www/html/Tests/Acceptance/Fixtures/packages/*/; do
+        [ -d "$dir" ] || continue
+        $TYPO3_BIN extension:activate "$(basename "$dir")" || true
+    done
+    # impexp is an optional system extension and needed for the XML fixture
+    # import below — activate it only if XML fixtures exist.
+    if ls /var/www/html/Tests/Acceptance/Fixtures/*.xml >/dev/null 2>&1; then
+        $TYPO3_BIN extension:activate impexp || true
+    fi
+    # extension:setup performs the post-activation steps (db schema, defaults).
+    $TYPO3_BIN extension:setup
+  _done
+
+  _progress " ├─ Configure TYPO3 (classic)"
+    $TYPO3_BIN configuration:set 'SYS/trustedHostsPattern' "${VERSION}.${EXTENSION_NAME}.ddev.site"
+    $TYPO3_BIN configuration:set 'BE/debug' 1
+    $TYPO3_BIN configuration:set 'FE/debug' 1
+    $TYPO3_BIN configuration:set 'SYS/devIPmask' '*'
+    $TYPO3_BIN configuration:set 'SYS/displayErrors' 1
+  _done
+
+  _progress " ├─ Import data"
+    import_xml_data; import_sql_data; import_site_configs; run_fixture_scripts
+  _done
+  _progress " ├─ Update TYPO3"
+    $TYPO3_BIN database:updateschema
+    $TYPO3_BIN cache:flush
+  _done
 }
 
 # Function to display an introductory message for the TYPO3 version.
@@ -275,6 +353,9 @@ function setup_environment() {
     rm -rf "$BASE_PATH"
     mkdir -p "$BASE_PATH/packages/$EXTENSION_KEY"
     chmod 775 -R $BASE_PATH
+    # Mode marker read by the exec wrappers (ddev <v> …) to pick the right
+    # binary and working directory. Missing marker falls back to "composer".
+    echo "composer" > "$BASE_PATH/.install-mode"
     export DATABASE="database_$VERSION"
     if [ "$VERSION" == "11" ]; then
         export TYPO3_BIN="$BASE_PATH/vendor/bin/typo3cms"
@@ -286,17 +367,25 @@ function setup_environment() {
 
 # Function to create symlinks for the main extension.
 # It iterates over the items in the current directory, excluding certain directories and files,
-# and creates symbolic links for the remaining items in the specified base path.
+# and creates symbolic links for the remaining items in the given target directory.
+# The target directory defaults to the Composer package path, so callers that
+# omit the argument keep the previous behaviour; the classic path passes the
+# TER-style typo3conf/ext/<key> directory instead.
+#
+# Arguments:
+#   $1 - Target directory (default: $BASE_PATH/packages/$EXTENSION_KEY).
 function create_symlinks_main_extension() {
+    local target="${1:-$BASE_PATH/packages/$EXTENSION_KEY}"
+    mkdir -p "$target"
     local exclusions=(".*" "Documentation" "Documentation-GENERATED-temp" "var")
     for item in ./*; do
-        local base_name=$(basename "$item")
+        local base_name; base_name=$(basename "$item")
         for exclusion in "${exclusions[@]}"; do
             if [[ $base_name == "$exclusion" ]]; then
                 continue 2
             fi
         done
-        ln -sr "$item" "$BASE_PATH/packages/$EXTENSION_KEY/$base_name"
+        ln -sr "$item" "$target/$base_name"
     done
 }
 
@@ -306,6 +395,81 @@ function create_symlinks_main_extension() {
 function create_symlinks_additional_extensions() {
     for dir in Tests/Acceptance/Fixtures/packages/*/; do
         ln -sr "$dir" "$BASE_PATH/packages/$(basename "$dir")"
+    done
+}
+
+# Function to start a classic (non-Composer) installation for the current
+# version. It rebuilds the same version slot from scratch: it prepares the
+# environment, downloads the matching TYPO3 sources from get.typo3.org and
+# wires up the classic docroot symlinks. There is deliberately no Composer
+# step here — see classic_create_symlinks for why.
+function classic_install_start() {
+    rm -rf "$BASE_PATH"
+    _progress " ├─ Setup environment"
+      classic_setup_environment
+    _done
+    _progress " ├─ Download TYPO3 $VERSION sources"
+      classic_download_sources
+    _done
+    _progress " ├─ Create symlinks"
+      classic_create_symlinks
+    _done
+}
+
+# Function to set up the environment for a classic TYPO3 installation.
+# It creates the classic docroot layout (typo3conf/ext, fileadmin, typo3temp),
+# writes the "classic" mode marker, exports the database name and the TYPO3
+# binary (the core CLI shipped in the sources, NOT vendor/bin), and drops any
+# existing database for the version.
+function classic_setup_environment() {
+    mkdir -p "$BASE_PATH/public/typo3conf/ext"
+    mkdir -p "$BASE_PATH/public/fileadmin" "$BASE_PATH/public/typo3temp"
+    chmod 775 -R "$BASE_PATH"
+    echo "classic" > "$BASE_PATH/.install-mode"
+    export DATABASE="database_$VERSION"
+    export TYPO3_BIN="$BASE_PATH/public/typo3/sysext/core/bin/typo3"   # core binary, NOT vendor/bin
+    mysql -uroot -proot -e "DROP DATABASE IF EXISTS $DATABASE"
+}
+
+# Function to download the TYPO3 sources for the current major version.
+# get.typo3.org/<major> redirects to the current source tarball of that major,
+# which is unpacked into a version-specific source directory.
+function classic_download_sources() {
+    local src_dir="$BASE_PATH/typo3_src-$VERSION"
+    mkdir -p "$src_dir"
+    # get.typo3.org/<major> redirects to the current source tarball of that major.
+    # -f is essential: without it, an HTML error page would be piped into tar.
+    curl -fsSL "https://get.typo3.org/$VERSION" | tar xz --strip-components=1 -C "$src_dir"
+}
+
+# Function to create the symlinks for a classic docroot.
+# It wires up the classic source symlink trio (typo3_src, typo3, index.php),
+# copies the shipped _.htaccess into the docroot, and symlinks the main
+# extension plus the fixture packages into typo3conf/ext/<key>.
+#
+# No Composer autoloader is used on purpose: the extension is linked like a TER
+# install so TYPO3 has to resolve its classes from the `autoload` key in
+# ext_emconf.php (v12/v13) resp. from the extension's composer.json (v14) —
+# which is exactly the fidelity this mode exists to test.
+function classic_create_symlinks() {
+    ( cd "$BASE_PATH/public"
+      ln -sf "../typo3_src-$VERSION" typo3_src
+      ln -sf typo3_src/typo3         typo3
+      ln -sf typo3_src/index.php     index.php )
+    # Apache rewrites for slug-based frontend URLs: the source package ships a
+    # ready-made _.htaccess in its root — copy it into the docroot.
+    if [ -f "$BASE_PATH/typo3_src-$VERSION/_.htaccess" ]; then
+        cp "$BASE_PATH/typo3_src-$VERSION/_.htaccess" "$BASE_PATH/public/.htaccess"
+    fi
+    # Main extension → typo3conf/ext/<underscored key>, faithful to a TER layout.
+    # No composer autoloader: TYPO3 must resolve classes from ext_emconf.php
+    # (v12/v13) resp. the extension's composer.json (v14).
+    ( cd /var/www/html
+      create_symlinks_main_extension "$BASE_PATH/public/typo3conf/ext/$EXTENSION_KEY" )
+    # Sitepackage + additional fixture packages, same target dir.
+    for dir in /var/www/html/Tests/Acceptance/Fixtures/packages/*/; do
+        [ -d "$dir" ] || continue
+        ln -sr "$dir" "$BASE_PATH/public/typo3conf/ext/$(basename "$dir")"
     done
 }
 
@@ -439,7 +603,13 @@ function import_site_configs() {
         return
     fi
 
-    TARGET_BASE="/var/www/html/.Build/$VERSION/config/sites"
+    # Classic mode reads site configs from public/typo3conf/sites/, whereas the
+    # Composer mode uses config/sites/. Pick the target accordingly.
+    if [ "${MODE:-composer}" = "classic" ]; then
+        TARGET_BASE="/var/www/html/.Build/$VERSION/public/typo3conf/sites"
+    else
+        TARGET_BASE="/var/www/html/.Build/$VERSION/config/sites"
+    fi
 
     mkdir -p "$TARGET_BASE"
 

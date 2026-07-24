@@ -142,3 +142,50 @@ JSON
   run ddev install 13
   assert_success
 }
+
+# End-to-end confirmation that a classic (non-Composer) install rebuilds the
+# version slot in place: the mode marker flips to "classic", the extension is
+# symlinked TER-style into typo3conf/ext/<key>, and the frontend is reachable
+# under the unchanged hostname.
+# bats test_tags=install
+@test "ddev install 13 --classic builds a classic instance" {
+  set -eu -o pipefail
+  if [ "${RUN_DDEV_INSTALL:-false}" != "true" ]; then
+    skip "set RUN_DDEV_INSTALL=true to run the networked 'ddev install' assertion"
+  fi
+
+  scaffold_with_existing_tests_dir
+
+    # Authenticate composer to avoid codeload rate-limit (HTTP 400) on TYPO3 subtree-split
+    # packages. Scope to THIS temp project (no `global`) so the token lives only in
+    # ${TESTDIR}/.ddev and is removed by teardown — never persisted to the user's global config.
+    if [ -n "${GITHUB_TOKEN:-}" ]; then
+      run ddev config --web-environment-add="COMPOSER_AUTH={\"github-oauth\":{\"github.com\":\"${GITHUB_TOKEN}\"}}"
+      assert_success
+      run ddev restart -y
+      assert_success
+    fi
+
+  run ddev install 13 --classic
+  assert_success
+
+  local ext_key
+  ext_key=$(echo "${PROJNAME}" | tr '-' '_')
+
+  # Mode marker flipped to classic.
+  run cat "${TESTDIR}/.Build/13/.install-mode"
+  assert_success
+  assert_output "classic"
+
+  # Extension linked TER-style into typo3conf/ext/<key>: the target is a
+  # directory whose entries are symlinks back to the extension sources (here the
+  # scaffolded composer.json), and there is no per-extension Composer autoloader.
+  assert_dir_exist "${TESTDIR}/.Build/13/public/typo3conf/ext/${ext_key}"
+  run test -L "${TESTDIR}/.Build/13/public/typo3conf/ext/${ext_key}/composer.json"
+  assert_success
+  assert_file_not_exist "${TESTDIR}/.Build/13/public/typo3conf/ext/${ext_key}/vendor/autoload.php"
+
+  # Frontend reachable under the unchanged per-version hostname.
+  run curl -sfI "https://13.${PROJNAME}.ddev.site"
+  assert_success
+}
