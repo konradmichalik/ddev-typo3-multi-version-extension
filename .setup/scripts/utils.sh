@@ -239,7 +239,7 @@ function post_setup() {
   _progress " ├─ Update TYPO3"
     update_typo3
   _done
-  printf " └─ \033[33mTYPO3 $VERSION setup completed!\033[0m Open in your browser: https://$VERSION.${EXTENSION_NAME}.ddev.site\n"
+  printf " └─ \033[33mTYPO3 $VERSION setup completed!\033[0m Open in your browser: https://$VERSION.${DDEV_SITENAME}.${DDEV_TLD}\n"
 }
 
 # Function to display an introductory message for the TYPO3 version.

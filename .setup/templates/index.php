@@ -5,6 +5,7 @@
 declare(strict_types=1);
 
 $extensionKey = getenv('EXTENSION_NAME');
+$siteHostname = getenv('DDEV_SITENAME') . '.' . getenv('DDEV_TLD');
 $typo3AdminUser = getenv('TYPO3_SETUP_ADMIN_USERNAME');
 $typo3AdminPassword = getenv('TYPO3_SETUP_ADMIN_PASSWORD');
 $supportedVersions = explode(' ', getenv('TYPO3_VERSIONS'));
@@ -49,7 +50,7 @@ if (file_exists($composerJsonPath)) {
     foreach ($supportedVersions as $version) {
         $directoryPath = '/var/www/html/.Build/' . $version;
         if (is_dir($directoryPath)) {
-            echo "<article class='flex'><kbd>{$version}</kbd><div><strong>Frontend</strong><br/><strong>Backend</strong></div><div><a target='_blank' href='https://{$version}.{$extensionKey}.ddev.site'>https://{$version}.{$extensionKey}.ddev.site</a><br/><a target='_blank' href='https://{$version}.{$extensionKey}.ddev.site/typo3/?u={$typo3AdminUser}&p={$typo3AdminPassword}'>https://{$version}.{$extensionKey}.ddev.site/typo3</a></div></article>";
+            echo "<article class='flex'><kbd>{$version}</kbd><div><strong>Frontend</strong><br/><strong>Backend</strong></div><div><a target='_blank' href='https://{$version}.{$siteHostname}'>https://{$version}.{$siteHostname}</a><br/><a target='_blank' href='https://{$version}.{$siteHostname}/typo3/?u={$typo3AdminUser}&p={$typo3AdminPassword}'>https://{$version}.{$siteHostname}/typo3</a></div></article>";
         } else {
             echo "<article>Version {$version} is not installed. Run <code>ddev install {$version}</code> to install.</article>";
         }
