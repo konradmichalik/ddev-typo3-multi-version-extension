@@ -155,6 +155,8 @@ ddev install all
 > [!NOTE]
 > A bare `404 page not found` right after `ddev restart` is the ddev **router**, not TYPO3 - registering a new project while others are already running can leave the router without a route for it until the project is restarted once more. Run `ddev restart` again if you see it.
 
+A worktree only ever contains committed content. If a repo-owned customization file such as `.ddev/.setup/project.sh` or a script under `.ddev/.setup/hooks/` isn't committed, a new worktree simply won't have it - no error, the customization just doesn't apply.
+
 ### Resource expectations
 
 Each worktree runs its own `web` and `db` container, plus roughly one full TYPO3 distribution per configured version under `.Build/`. Running several worktrees at once multiplies both. `ddev poweroff` stops *all* DDEV projects, not just the current one - worth knowing if several worktrees (or agents) are meant to keep running in parallel.
