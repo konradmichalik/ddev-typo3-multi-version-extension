@@ -1,4 +1,7 @@
 #!/bin/bash
+#ddev-generated
+# If you want to take over this file and customize it, remove the line above
+# and ddev will respect it and won't overwrite the file.
 
 # Verbose flag — set VERBOSE=1 (or pass -v/--verbose to `ddev install`) to
 # disable the spinner and stream all command output live.

@@ -1,5 +1,6 @@
 #!/bin/bash
 
+## #ddev-generated
 ## Description: Exec command for TYPO3 instance 14.
 ## Usage: 14
 ## Example: "ddev 14 composer du -o" or "ddev 14 typo3 cache:flush"

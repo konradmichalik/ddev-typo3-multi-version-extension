@@ -1,6 +1,7 @@
 #!/bin/bash
 set -eo pipefail
 
+## #ddev-generated
 . .ddev/.setup/scripts/utils.sh
 
 # Pre-setup function for TYPO3 version 12.

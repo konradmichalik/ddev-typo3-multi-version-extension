@@ -1,4 +1,7 @@
 <?php
+// #ddev-generated
+// If you want to take over this file and customize it, remove the line above
+// and ddev will respect it and won't overwrite the file.
 declare(strict_types=1);
 
 $extensionKey = getenv('EXTENSION_NAME');
