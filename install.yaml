@@ -64,8 +64,6 @@ post_install_actions:
     fi
     
     echo "Set extension key to ${extension_key} and extension name to ${extension_name} in"
-    echo " - .ddev/apache/10.conf"
-    echo " - .ddev/apache/20.conf"
     echo " - .ddev/docker-compose.typo3-setup.yaml"
   - |
     #ddev-description:Create a config.typo3-setup.yaml
