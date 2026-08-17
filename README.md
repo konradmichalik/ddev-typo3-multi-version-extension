@@ -76,6 +76,8 @@ If you need more extensions for your setup, you can place them in the `Tests/Acc
 > [!NOTE]
 > You may not need all TYPO3 versions? You can remove the unwanted versions from the `TYPO3_VERSIONS` variable in [.ddev/docker-compose.typo3-setup.yaml](docker-compose.typo3-setup.yaml).
 
+Every installed instance runs with `TYPO3_CONTEXT=Development`. Override it per project with `ddev config --web-environment-add="TYPO3_CONTEXT=Production"` (followed by `ddev restart`) if you need production-context parity.
+
 ### Fixtures
 
 During installation, fixture data from `Tests/Acceptance/Fixtures/` is automatically imported. The following types are supported:
