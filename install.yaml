@@ -16,6 +16,7 @@ project_files:
   - apache/20.conf
   - commands/host/launch
   - commands/host/worktree-init
+  - commands/host/worktree-remove
   - commands/web/.install-11
   - commands/web/.install-12
   - commands/web/.install-13
