@@ -291,7 +291,8 @@ function setup_environment() {
 # It iterates over the items in the current directory, excluding certain directories and files,
 # and creates symbolic links for the remaining items in the specified base path.
 function create_symlinks_main_extension() {
-    local exclusions=(".*" "Documentation" "Documentation-GENERATED-temp" "var")
+    local exclusions=()
+    read -r -a exclusions <<< "${SYMLINK_EXCLUSIONS:-Documentation Documentation-GENERATED-temp var}"
     for item in ./*; do
         local base_name=$(basename "$item")
         for exclusion in "${exclusions[@]}"; do
