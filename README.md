@@ -76,6 +76,16 @@ If you need more extensions for your setup, you can place them in the `Tests/Acc
 > [!NOTE]
 > You may not need all TYPO3 versions? You can remove the unwanted versions from the `TYPO3_VERSIONS` variable in [.ddev/docker-compose.typo3-setup.yaml](docker-compose.typo3-setup.yaml).
 
+### Avoiding CS-fixer churn on `.ddev/`
+
+If your project runs `php-cs-fixer` (or a similar tool) on the whole repository, it will also reformat the files this add-on manages under `.ddev/` to match *your* project's rules - which may differ from the rules this add-on's own files were written with. That produces a spurious diff on every `ddev add-on get` update, and every `composer cgl`/fixer run dirties files that aren't supposed to be edited locally anyway. Exclude `.ddev/` from your fixer's paths to avoid this:
+
+```php
+$finder = (new PhpCsFixer\Finder())
+    ->in(__DIR__)
+    ->exclude('.ddev');
+```
+
 ### Fixtures
 
 During installation, fixture data from `Tests/Acceptance/Fixtures/` is automatically imported. The following types are supported:
