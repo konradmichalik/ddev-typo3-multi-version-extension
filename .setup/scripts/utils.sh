@@ -485,8 +485,7 @@ function post_setup_11 {
 
   sed -i "/'deprecations'/,/^[[:space:]]*'disabled' => true,/s/'disabled' => true,/'disabled' => false,/" /var/www/html/.Build/$VERSION/public/typo3conf/LocalConfiguration.php
 
-  sed -i -e "s/base: ht\//base: \//g" /var/www/html/.Build/$VERSION/config/sites/main/config.yaml
-  sed -i -e 's/base: \/en\//base: \//g' /var/www/html/.Build/$VERSION/config/sites/main/config.yaml
+  sed -i -E "s|^base: .*|base: /|" /var/www/html/.Build/$VERSION/config/sites/main/config.yaml
 }
 
 # Function to perform post-setup tasks for TYPO3 version 12.
@@ -498,8 +497,7 @@ function post_setup_12 {
 
   sed -i "/'deprecations'/,/^[[:space:]]*'disabled' => true,/s/'disabled' => true,/'disabled' => false,/" /var/www/html/.Build/$VERSION/config/system/settings.php
 
-  sed -i -e "s/base: ht\//base: \//g" /var/www/html/.Build/$VERSION/config/sites/main/config.yaml
-  sed -i -e 's/base: \/en\//base: \//g' /var/www/html/.Build/$VERSION/config/sites/main/config.yaml
+  sed -i -E "s|^base: .*|base: /|" /var/www/html/.Build/$VERSION/config/sites/main/config.yaml
 }
 
 # Function to perform post-setup tasks for TYPO3 version 13.
@@ -507,10 +505,12 @@ function post_setup_12 {
 # configures TYPO3 settings, and modifies configuration files to enable deprecations.
 function post_setup_13 {
   mysql -h db -u root -p"root" -e "CREATE DATABASE $DATABASE;"
-  $TYPO3_BIN  setup -n --dbname=$DATABASE --password=$TYPO3_DB_PASSWORD --create-site="https://${VERSION}.${EXTENSION_NAME}.ddev.site" --admin-user-password=$TYPO3_SETUP_ADMIN_PASSWORD
+  $TYPO3_BIN  setup -n --dbname=$DATABASE --password=$TYPO3_DB_PASSWORD --create-site="https://${VERSION}.${DDEV_SITENAME}.${DDEV_TLD}" --admin-user-password=$TYPO3_SETUP_ADMIN_PASSWORD
   setup_typo3
 
   sed -i "/'deprecations'/,/^[[:space:]]*'disabled' => true,/s/'disabled' => true,/'disabled' => false,/" /var/www/html/.Build/$VERSION/config/system/settings.php
+
+  sed -i -E "s|^base: .*|base: /|" /var/www/html/.Build/$VERSION/config/sites/main/config.yaml
 }
 
 # Function to perform post-setup tasks for TYPO3 version 14.
@@ -518,10 +518,12 @@ function post_setup_13 {
 # configures TYPO3 settings, and modifies configuration files to enable deprecations.
 function post_setup_14 {
   mysql -h db -u root -p"root" -e "CREATE DATABASE $DATABASE;"
-  $TYPO3_BIN  setup -n --dbname=$DATABASE --password=$TYPO3_DB_PASSWORD --create-site="https://${VERSION}.${EXTENSION_NAME}.ddev.site" --admin-user-password=$TYPO3_SETUP_ADMIN_PASSWORD
+  $TYPO3_BIN  setup -n --dbname=$DATABASE --password=$TYPO3_DB_PASSWORD --create-site="https://${VERSION}.${DDEV_SITENAME}.${DDEV_TLD}" --admin-user-password=$TYPO3_SETUP_ADMIN_PASSWORD
   setup_typo3
 
   sed -i "/'deprecations'/,/^[[:space:]]*'disabled' => true,/s/'disabled' => true,/'disabled' => false,/" /var/www/html/.Build/$VERSION/config/system/settings.php
+
+  sed -i -E "s|^base: .*|base: /|" /var/www/html/.Build/$VERSION/config/sites/main/config.yaml
 }
 
 # Function to display a colored message.

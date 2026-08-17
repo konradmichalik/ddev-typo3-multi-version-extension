@@ -90,7 +90,7 @@ During installation, fixture data from `Tests/Acceptance/Fixtures/` is automatic
 |------|----------|-------------|
 | XML | `Tests/Acceptance/Fixtures/*.xml` | TYPO3 export files, imported via `impexp:import` |
 | SQL | `Tests/Acceptance/Fixtures/*.sql` | Raw SQL files, imported directly into the database |
-| Site config | `Tests/Acceptance/Fixtures/sites/<site-name>/` | Site configuration directories copied to `config/sites/`. Use `VERSION_PLACEHOLDER` in `config.yaml` to insert the TYPO3 version automatically. |
+| Site config | `Tests/Acceptance/Fixtures/sites/<site-name>/` | Site configuration directories copied to `config/sites/`. Use `VERSION_PLACEHOLDER` in `config.yaml` to insert the TYPO3 version automatically. Use a relative `base: /` - an absolute hostname in `base` breaks as soon as the project's hostname changes (e.g. in a `git worktree` checkout). |
 | Shell scripts | `Tests/Acceptance/Fixtures/*.sh` | Executed during setup (failures are logged but don't abort the installation) |
 
 ## 📊 Usage
