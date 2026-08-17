@@ -90,6 +90,17 @@ Copy [.ddev/.setup/project.sh.example](.setup/project.sh.example) to `.ddev/.set
 
 `$VERSION` in a package constraint expands per version at install time - write it single-quoted (e.g. `'typo3/cms-reports:^$VERSION'`) so it isn't expanded early.
 
+### Install hooks
+
+For install steps that don't fit a variable in `project.sh`, add a script at `.ddev/.setup/hooks/<name>.sh` - it's sourced automatically if present, so it has access to `$VERSION`, `$BASE_PATH`, `$TYPO3_BIN`, `$DATABASE`, `$EXTENSION_KEY` and the `message`/`_progress`/`_done` helpers. Unlike the best-effort `Tests/Acceptance/Fixtures/*.sh` scripts, a failing command in a hook aborts the install with its output shown, not silently swallowed.
+
+| Hook | Runs |
+|---|---|
+| `pre-install` | Before the environment is set up (`$TYPO3_BIN`/`$DATABASE` are not yet available at this point) |
+| `post-composer` | After the base composer packages are installed |
+| `post-typo3-setup` | After TYPO3 itself is set up, before fixture import |
+| `post-install` | Last, after fixtures, site configs and the schema update |
+
 ### Fixtures
 
 During installation, fixture data from `Tests/Acceptance/Fixtures/` is automatically imported. The following types are supported:

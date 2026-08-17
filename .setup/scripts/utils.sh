@@ -209,6 +209,7 @@ function pre_setup() {
   _done
   install_start
   install_composer_packages
+  run_hook "post-composer"
 }
 
 # Function to perform post-setup tasks for TYPO3 installation.
@@ -233,6 +234,8 @@ function post_setup() {
     fi
   _done
 
+  run_hook "post-typo3-setup"
+
   _progress " ├─ Import data"
     import_xml_data
     import_sql_data
@@ -242,7 +245,33 @@ function post_setup() {
   _progress " ├─ Update TYPO3"
     update_typo3
   _done
+
+  run_hook "post-install"
+
   printf " └─ \033[33mTYPO3 $VERSION setup completed!\033[0m Open in your browser: https://$VERSION.${EXTENSION_NAME}.ddev.site\n"
+}
+
+# Function to run an optional, repo-owned install hook if it exists.
+# Hooks live at .ddev/.setup/hooks/<name>.sh and are sourced (not executed as
+# a subprocess) so they have access to $VERSION, $BASE_PATH, $TYPO3_BIN,
+# $DATABASE, $EXTENSION_KEY and the message/_progress/_done helpers. Because
+# they are sourced into a caller running under `set -e`, a failing command in
+# a hook aborts the install and its captured output is replayed - unlike the
+# best-effort Tests/Acceptance/Fixtures/*.sh scripts, a hook failure is not
+# swallowed.
+#
+# Supported hook names: pre-install, post-composer, post-typo3-setup, post-install.
+function run_hook() {
+    local hook_name="$1"
+    local hook_file="/var/www/html/.ddev/.setup/hooks/${hook_name}.sh"
+
+    if [ ! -f "$hook_file" ]; then
+        return 0
+    fi
+
+    _progress " ├─ Hook: $hook_name"
+      source "$hook_file"
+    _done
 }
 
 # Function to display an introductory message for the TYPO3 version.
@@ -260,6 +289,8 @@ function intro_typo3() {
 # sets up the environment, creates symlinks for the main and additional extensions,
 # and sets up Composer for the TYPO3 installation.
 function install_start() {
+    run_hook "pre-install"
+
     rm -rf /var/www/html/.Build/$VERSION/*
     _progress " ├─ Setup environment"
       setup_environment
