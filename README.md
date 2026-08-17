@@ -76,6 +76,20 @@ If you need more extensions for your setup, you can place them in the `Tests/Acc
 > [!NOTE]
 > You may not need all TYPO3 versions? You can remove the unwanted versions from the `TYPO3_VERSIONS` variable in [.ddev/docker-compose.typo3-setup.yaml](docker-compose.typo3-setup.yaml).
 
+### Project-specific customizations
+
+Copy [.ddev/.setup/project.sh.example](.setup/project.sh.example) to `.ddev/.setup/project.sh` to customize the install without touching `utils.sh` - `project.sh` isn't managed by the add-on, so it survives `ddev add-on get` upgrades. Supported variables:
+
+| Variable | Effect |
+|---|---|
+| `ADDITIONAL_PACKAGES` | Extra composer packages installed alongside the base install |
+| `SITEPACKAGE_PACKAGES` | Replaces the default `test/sitepackage` when set |
+| `COMPOSER_CONFIG` | Extra `composer config` entries |
+| `TYPO3_SETTINGS` | Extra `typo3 configuration:set` calls |
+| `FIXTURE_EXTENSION_DIRS` | Extra directories (besides `Tests/Acceptance/Fixtures/packages`) whose subdirectories get symlinked in as additional extensions |
+
+`$VERSION` in a package constraint expands per version at install time - write it single-quoted (e.g. `'typo3/cms-reports:^$VERSION'`) so it isn't expanded early.
+
 ### Fixtures
 
 During installation, fixture data from `Tests/Acceptance/Fixtures/` is automatically imported. The following types are supported:

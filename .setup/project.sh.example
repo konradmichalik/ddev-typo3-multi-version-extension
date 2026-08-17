@@ -1,0 +1,39 @@
+# .ddev/.setup/project.sh — repo-owned customizations for `ddev install`.
+#
+# Copy this file to .ddev/.setup/project.sh and adjust it. It is sourced by
+# utils.sh on every install, and it survives `ddev add-on get` upgrades since
+# it isn't managed by the add-on. Delete anything you don't need.
+#
+# $VERSION expands at use time, not when this file is sourced — write it
+# single-quoted (or with \$VERSION inside a double-quoted string) so it
+# reaches the composer command literally and gets substituted per version.
+
+# Extra composer packages installed alongside the base install.
+ADDITIONAL_PACKAGES=(
+    'typo3/cms-reports:^$VERSION'
+    'typo3/cms-lowlevel:^$VERSION'
+)
+
+# Replaces the default test/sitepackage when set.
+SITEPACKAGE_PACKAGES=(
+    'konradmichalik/routing-test:*@dev'
+)
+
+# Extra `composer config` entries (key and value, space-separated).
+COMPOSER_CONFIG=(
+    'allow-plugins.helhum/dotenv-connector true'
+)
+
+# Extra `typo3 configuration:set` calls (path and value, space-separated).
+# Use \$DDEV_SITENAME (escaped) if the value should reflect the current
+# checkout's hostname rather than a fixed one.
+TYPO3_SETTINGS=(
+    "MAIL/defaultMailFromAddress no-reply@\${DDEV_SITENAME}.ddev.site"
+    'MAIL/defaultMailFromName "My Project"'
+)
+
+# Extra directories (besides Tests/Acceptance/Fixtures/packages) whose
+# subdirectories should be symlinked in as additional extensions.
+FIXTURE_EXTENSION_DIRS=(
+    'Tests/Functional/Fixtures/Extensions'
+)
