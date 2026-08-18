@@ -8,6 +8,23 @@ pre_install_actions:
       exit 1;
     fi
 
+  - |
+    #ddev-description:Remove a pre-rename docker-compose.web.yaml
+    old_compose="${DDEV_APPROOT}/.ddev/docker-compose.web.yaml"
+    # Early add-on versions generated this file under the generic
+    # "docker-compose.web.yaml" name before it was renamed to
+    # docker-compose.typo3-setup.yaml. Left in place, it sorts after the
+    # current file and silently wins on every conflicting key (e.g.
+    # TYPO3_VERSIONS), permanently shadowing config.yaml/project changes with
+    # whatever was true the day the project was first installed. Only remove
+    # it when it carries this add-on's own fingerprint - docker-compose.web.yaml
+    # is otherwise a generic DDEV filename real projects may use for
+    # unrelated customizations, so this must never touch an unrelated file.
+    if [ -f "$old_compose" ] && grep -q 'EXTENSION_KEY=' "$old_compose" && grep -q 'TYPO3_VERSIONS=' "$old_compose"; then
+      rm -f "$old_compose"
+      echo "Removed stale pre-rename .ddev/docker-compose.web.yaml (superseded by docker-compose.typo3-setup.yaml)."
+    fi
+
 project_files:
   - .setup/scripts/utils.sh
   - .setup/scripts/write-git-info.sh
