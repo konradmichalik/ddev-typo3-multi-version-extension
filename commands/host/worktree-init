@@ -30,3 +30,4 @@ override_file=".ddev/config.zz-worktree.local.yaml"
 
 echo "Wrote ${override_file} with hostnames for project '${DDEV_PROJECT}' (versions: ${typo3_versions})."
 echo "Run 'ddev restart' to apply it, then 'ddev install all' to install the TYPO3 instances."
+echo "If you get a bare '404 page not found' right after restarting, that's the ddev router not yet having a route for this new project - run 'ddev restart' once more."

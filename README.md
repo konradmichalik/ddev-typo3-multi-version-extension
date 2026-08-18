@@ -253,6 +253,9 @@ ddev install all
 
 `ddev worktree-init` regenerates this checkout's router hostnames so they don't collide with the primary checkout's; `.Build/` is gitignored, so every worktree needs its own `ddev install`.
 
+> [!NOTE]
+> A bare `404 page not found` right after `ddev restart` is the ddev **router**, not TYPO3 - registering a new project while others are already running can leave the router without a route for it until the project is restarted once more. Run `ddev restart` again if you see it.
+
 ### Resource expectations
 
 Each worktree runs its own `web` and `db` container, plus roughly one full TYPO3 distribution per configured version under `.Build/`. Running several worktrees at once multiplies both. `ddev poweroff` stops *all* DDEV projects, not just the current one - worth knowing if several worktrees (or agents) are meant to keep running in parallel.
