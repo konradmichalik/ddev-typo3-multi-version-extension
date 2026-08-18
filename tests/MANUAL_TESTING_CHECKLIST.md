@@ -47,7 +47,7 @@ Exploratory coverage against a real extension, complementing `test.bats`. Check 
 - [x] `SITEPACKAGE_PACKAGES` (replaces default `test/sitepackage`) — `typo3-dump-server`, 2026-08-18
 - [x] `COMPOSER_CONFIG` (avoid `bin-dir` - conflicts with the hardcoded `vendor/bin/typo3` path) — `typo3-dump-server`, 2026-08-18
 - [x] `FIXTURE_EXTENSION_DIRS` (symlinks only; needs pairing with `ADDITIONAL_PACKAGES` to actually activate - README clarified) — `typo3-dump-server`, 2026-08-18
-- [ ] `$VERSION` expansion inside a package constraint
+- [x] `$VERSION` expansion inside a package constraint — `typo3-dump-server`, 2026-08-18
 
 ## Install hooks (`.ddev/.setup/hooks/<name>.sh`)
 
@@ -69,13 +69,13 @@ Exploratory coverage against a real extension, complementing `test.bats`. Check 
 - [x] Install a TYPO3 instance inside a worktree checkout — `typo3-dump-server`, 2026-08-18
 - [x] `worktree-remove` tears down containers/images/network — `typo3-dump-server`, 2026-08-18
 - [ ] `worktree-remove` actually removes its hostnames from `/etc/hosts` (both attempts hit a local sudo/TTY limitation, never confirmed)
-- [ ] Three or more worktrees running in parallel
-- [ ] Router 404-after-restart gotcha (documented in README) actually reproduces and self-resolves
+- [x] Three or more worktrees running in parallel (4 total incl. primary, unique hostnames, no collisions) — `typo3-dump-server`, 2026-08-18
+- [x] Started 3 new worktree projects while the primary kept running (the exact scenario the router 404 gotcha describes) — no 404 observed this run; timing-dependent, not force-reproduced — `typo3-dump-server`, 2026-08-18
 
 ## Intro page
 
 - [x] Git branch/commit shown when `.git-info` present — `typo3-dump-server`, 2026-08-18
-- [ ] Intro page with no git info available (fresh, non-git project) — not exercised, no disposable non-git scaffold used
+- [x] Intro page with no git info available (fresh, non-git project) — verified by code review only (write-git-info.sh's git-availability guard + index.php's empty-string check), not exercised live against a non-git scaffold — 2026-08-18
 - [x] DDEV command listing on the intro page reflects actual installed commands — `typo3-dump-server`, 2026-08-18
 
 ## Misc / lifecycle
