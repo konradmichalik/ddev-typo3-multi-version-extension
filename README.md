@@ -195,6 +195,22 @@ To switch back to a Composer instance, re-run the install without the flag:
 
     ddev install 13
 
+### Non-core Composer dependencies
+
+If your extension requires a package TYPO3 core doesn't already ship (e.g. `symfony/var-dumper`),
+classic mode has no `vendor/` to resolve it from — the class simply won't be found at runtime.
+Bundle such dependencies into your extension with
+[`eliashaeussler/typo3-vendor-bundler`](https://github.com/eliashaeussler/typo3-vendor-bundler)
+before testing classic mode; the [reusable release workflow](https://github.com/konradmichalik/reusable-github-actions)
+mirrors the same bundling step for TER releases.
+
+### Fixture packages without `ext_emconf.php`
+
+TYPO3's classic-mode package discovery only recognizes directories containing an `ext_emconf.php`.
+The default `sitepackage` fixture (and any project fixture under `Tests/Acceptance/Fixtures/packages/`)
+ships only a `composer.json`, so this add-on generates a minimal `ext_emconf.php` for it automatically
+in classic mode - the fixture's own source files are never modified.
+
 **Notes**
 
 - A version slot is either Composer or classic at a time, not both — rebuild to switch.

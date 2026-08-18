@@ -235,8 +235,8 @@ function post_setup() {
   # below stays unchanged.
   if [ "${MODE:-composer}" = "classic" ]; then
     classic_post_setup
-    printf " └─ \033[33mTYPO3 %s (classic) setup completed!\033[0m Open: https://%s.%s.ddev.site\n" \
-           "$VERSION" "$VERSION" "$EXTENSION_NAME"
+    printf " └─ \033[33mTYPO3 %s (classic) setup completed!\033[0m Open: https://%s.%s.%s\n" \
+           "$VERSION" "$VERSION" "$DDEV_SITENAME" "$DDEV_TLD"
     return
   fi
 
@@ -280,6 +280,40 @@ function post_setup() {
     "$VERSION" "$VERSION" "$DDEV_SITENAME" "$DDEV_TLD"
 }
 
+# Function to set a TYPO3 configuration value in a classic-mode instance by
+# editing typo3conf/system/settings.php directly. Classic mode runs against
+# the bare TYPO3 core CLI binary, which - unlike composer mode's
+# helhum/typo3-console - has no 'configuration:set' command at all.
+#
+# Arguments:
+#   $1 - Slash-separated config path (e.g. "SYS/trustedHostsPattern").
+#   $2 - Value to set. "true"/"false" become booleans, numeric strings
+#        become int/float, everything else stays a string - matching
+#        configuration:set's own value coercion in composer mode.
+function classic_configuration_set() {
+    local settings_file="$BASE_PATH/public/typo3conf/system/settings.php"
+    php -r '
+        [$settingsFile, $path, $value] = array_slice($argv, 1);
+        if ($value === "true") {
+            $value = true;
+        } elseif ($value === "false") {
+            $value = false;
+        } elseif (is_numeric($value)) {
+            $value += 0;
+        }
+        $config = require $settingsFile;
+        $ref = &$config;
+        foreach (explode("/", $path) as $key) {
+            if (!isset($ref[$key]) || !is_array($ref[$key])) {
+                $ref[$key] = [];
+            }
+            $ref = &$ref[$key];
+        }
+        $ref = $value;
+        file_put_contents($settingsFile, "<?php\nreturn " . var_export($config, true) . ";\n");
+    ' -- "$settings_file" "$1" "$2"
+}
+
 # Function to perform post-setup tasks for a classic (non-Composer) install.
 # It runs the env-driven TYPO3 setup against the core CLI binary, activates the
 # extensions the classic way (classic mode does NOT auto-activate them),
@@ -297,7 +331,7 @@ function classic_post_setup() {
         --dbname="$DATABASE" \
         --password="$TYPO3_DB_PASSWORD" \
         --admin-user-password="$TYPO3_SETUP_ADMIN_PASSWORD" \
-        --create-site="https://${VERSION}.${EXTENSION_NAME}.ddev.site"
+        --create-site="https://${VERSION}.${DDEV_SITENAME}.${DDEV_TLD}"
   _done
 
   _progress " ├─ Activate extensions (classic)"
@@ -322,18 +356,21 @@ function classic_post_setup() {
   _done
 
   _progress " ├─ Configure TYPO3 (classic)"
-    $TYPO3_BIN configuration:set 'SYS/trustedHostsPattern' "${VERSION}.${DDEV_SITENAME}.${DDEV_TLD}"
-    $TYPO3_BIN configuration:set 'BE/debug' 1
-    $TYPO3_BIN configuration:set 'FE/debug' 1
-    $TYPO3_BIN configuration:set 'SYS/devIPmask' '*'
-    $TYPO3_BIN configuration:set 'SYS/displayErrors' 1
+    classic_configuration_set 'SYS/trustedHostsPattern' "${VERSION}.${DDEV_SITENAME}.${DDEV_TLD}"
+    classic_configuration_set 'BE/debug' true
+    classic_configuration_set 'FE/debug' true
+    classic_configuration_set 'SYS/devIPmask' '*'
+    classic_configuration_set 'SYS/displayErrors' 1
   _done
 
   _progress " ├─ Import data"
     import_xml_data; import_sql_data; import_site_configs; run_fixture_scripts
   _done
   _progress " ├─ Update TYPO3"
-    $TYPO3_BIN database:updateschema
+    # No separate schema update here: database:updateschema is a
+    # helhum/typo3-console command unavailable on the bare core CLI, and
+    # extension:setup above already updated the schema for every extension
+    # it just activated.
     $TYPO3_BIN cache:flush
   _done
 }
@@ -571,8 +608,58 @@ function classic_create_symlinks() {
     # Sitepackage + additional fixture packages, same target dir.
     for dir in /var/www/html/Tests/Acceptance/Fixtures/packages/*/; do
         [ -d "$dir" ] || continue
-        ln -sr "$dir" "$BASE_PATH/public/typo3conf/ext/$(basename "$dir")"
+        local pkg_key target
+        pkg_key="$(basename "$dir")"
+        target="$BASE_PATH/public/typo3conf/ext/$pkg_key"
+        if [ -f "${dir}ext_emconf.php" ]; then
+            ln -sr "$dir" "$target"
+        else
+            # Classic-mode package discovery only scans for ext_emconf.php
+            # (PackageManager::scanAvailablePackages), so a composer.json-only
+            # fixture like the default sitepackage would never be found. Link
+            # its contents individually into a real directory instead of
+            # symlinking the whole thing, so a generated ext_emconf.php can
+            # live alongside them without touching the fixture's own source
+            # tree (which is shared, unmodified, across every version slot).
+            mkdir -p "$target"
+            ( cd "$dir"
+              for item in ./*; do
+                  ln -sr "$item" "$target/$(basename "$item")"
+              done )
+            classic_generate_ext_emconf "$target" "$pkg_key"
+        fi
     done
+}
+
+# Function to generate a minimal ext_emconf.php for a classic-mode extension
+# directory that ships only a composer.json. TYPO3's classic-mode package
+# discovery (PackageManager::scanAvailablePackages) only recognizes
+# directories containing an ext_emconf.php, so a Composer-manifest-only
+# fixture package would otherwise never be found or activatable.
+#
+# Arguments:
+#   $1 - Target directory (must already contain a composer.json).
+#   $2 - Extension key, matching the directory name under typo3conf/ext.
+function classic_generate_ext_emconf() {
+    local target="$1" ext_key="$2"
+    [ -f "$target/composer.json" ] || return 0
+    php -r '
+        [$target, $extKey] = array_slice($argv, 1);
+        $composer = json_decode(file_get_contents("$target/composer.json"), true) ?? [];
+        $emConf = [
+            "title" => $composer["description"] ?? $extKey,
+            "description" => $composer["description"] ?? "",
+            "version" => $composer["version"] ?? "1.0.0",
+            "state" => "stable",
+        ];
+        if (!empty($composer["autoload"])) {
+            $emConf["autoload"] = $composer["autoload"];
+        }
+        file_put_contents(
+            "$target/ext_emconf.php",
+            "<?php\n\$EM_CONF[\$_EXTKEY] = " . var_export($emConf, true) . ";\n"
+        );
+    ' -- "$target" "$ext_key"
 }
 
 # Function to set up Composer for TYPO3 installation.
