@@ -46,7 +46,11 @@ if (file_exists($composerJsonPath)) {
     foreach ($supportedVersions as $version) {
         $directoryPath = '/var/www/html/.Build/' . $version;
         if (is_dir($directoryPath)) {
-            echo "<article class='flex'><kbd>{$version}</kbd><div><strong>Frontend</strong><br/><strong>Backend</strong></div><div><a target='_blank' href='https://{$version}.{$extensionKey}.ddev.site'>https://{$version}.{$extensionKey}.ddev.site</a><br/><a target='_blank' href='https://{$version}.{$extensionKey}.ddev.site/typo3/?u={$typo3AdminUser}&p={$typo3AdminPassword}'>https://{$version}.{$extensionKey}.ddev.site/typo3</a></div></article>";
+            // Read the install-mode marker so the intro page shows whether a
+            // version slot was built in composer (default) or classic mode.
+            $modeFile = $directoryPath . '/.install-mode';
+            $mode = is_file($modeFile) ? trim(file_get_contents($modeFile)) : 'composer';
+            echo "<article class='flex'><kbd>{$version}</kbd><div><small>{$mode}</small></div><div><strong>Frontend</strong><br/><strong>Backend</strong></div><div><a target='_blank' href='https://{$version}.{$extensionKey}.ddev.site'>https://{$version}.{$extensionKey}.ddev.site</a><br/><a target='_blank' href='https://{$version}.{$extensionKey}.ddev.site/typo3/?u={$typo3AdminUser}&p={$typo3AdminPassword}'>https://{$version}.{$extensionKey}.ddev.site/typo3</a></div></article>";
         } else {
             echo "<article>Version {$version} is not installed. Run <code>ddev install {$version}</code> to install.</article>";
         }

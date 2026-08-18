@@ -54,6 +54,9 @@ ddev install all
 ddev install 12
 ```
 
+You can also rebuild a single version as a Composer-free (TER-style) instance with
+`ddev install 13 --classic` — see [🧩 Classic mode](#-classic-mode-non-composer).
+
 ![Screencast](./images/screencast.gif)
 
 For a detailed console output, use the following command:
@@ -86,6 +89,47 @@ During installation, fixture data from `Tests/Acceptance/Fixtures/` is automatic
 | SQL | `Tests/Acceptance/Fixtures/*.sql` | Raw SQL files, imported directly into the database |
 | Site config | `Tests/Acceptance/Fixtures/sites/<site-name>/` | Site configuration directories copied to `config/sites/`. Use `VERSION_PLACEHOLDER` in `config.yaml` to insert the TYPO3 version automatically. |
 | Shell scripts | `Tests/Acceptance/Fixtures/*.sh` | Executed during setup (failures are logged but don't abort the installation) |
+
+## 🧩 Classic mode (non-Composer)
+
+Most extensions on the TER are installed in **classic mode** (non-Composer), where TYPO3
+resolves classes from the `autoload` key in `ext_emconf.php` instead of Composer's PSR-4
+autoloader. Bugs that only surface there — a missing or drifted `ext_emconf.php` autoload
+key, an extension key mismatch, or a runtime dependency that only exists because Composer
+happened to pull it in — stay invisible in the default Composer-mode instances.
+
+Append `--classic` to an install to (re)build that version as a Composer-free instance:
+
+    ddev install 13 --classic
+
+This **replaces the version 13 slot in place**: TYPO3 sources are downloaded from
+`get.typo3.org` (no `composer install`), your extension is symlinked into
+`typo3conf/ext/<extension_key>` and activated the classic way — exactly like on the TER.
+On TYPO3 v12/v13, class loading is driven by the `autoload` key in `ext_emconf.php`;
+on TYPO3 v14, classic mode requires a `composer.json` in the extension instead. The
+instance keeps the same hostname:
+
+    https://13.<extension-name>.ddev.site
+
+The regular commands detect the mode automatically:
+
+    ddev 13 typo3 cache:flush
+    ddev launch 13
+
+To switch back to a Composer instance, re-run the install without the flag:
+
+    ddev install 13
+
+**Notes**
+
+- A version slot is either Composer or classic at a time, not both — rebuild to switch.
+  Different versions can still run in different modes side by side (e.g. Composer 13 and
+  classic 14).
+- Classic mode is **per version** and is not part of `ddev install all`.
+- Only TYPO3 v12+ is supported in classic mode.
+- On TYPO3 v14, classic mode only recognises extensions that ship a `composer.json` —
+  make sure your extension provides one before testing v14 in classic mode.
+- `composer` commands (`ddev 13 composer ...`) are unavailable while a slot is in classic mode.
 
 ## 📊 Usage
 
