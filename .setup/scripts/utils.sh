@@ -585,6 +585,10 @@ function setup_composer() {
     composer config repositories.packages path 'packages/*' --working-dir "$BASE_PATH"
     composer config --no-interaction allow-plugins.typo3/cms-composer-installers true --working-dir "$BASE_PATH"
     composer config --no-interaction allow-plugins.typo3/class-alias-loader true --working-dir "$BASE_PATH"
+    # These are throwaway dev instances, including of TYPO3 versions past
+    # their security support window - Composer's advisory audit must not
+    # block installing them.
+    composer config --no-interaction audit.block-insecure false --working-dir "$BASE_PATH"
 
     for entry in "${COMPOSER_CONFIG[@]}"; do
         composer config --no-interaction $entry --working-dir "$BASE_PATH"
