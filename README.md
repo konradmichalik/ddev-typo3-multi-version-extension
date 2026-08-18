@@ -260,6 +260,10 @@ ddev install all
 
 Each worktree runs its own `web` and `db` container, plus roughly one full TYPO3 distribution per configured version under `.Build/`. Running several worktrees at once multiplies both. `ddev poweroff` stops *all* DDEV projects, not just the current one - worth knowing if several worktrees (or agents) are meant to keep running in parallel.
 
+### Removing a worktree
+
+From inside the worktree, `ddev worktree-remove` unregisters its DDEV project and drops its database, images and volumes, then prints the `git worktree remove` / `git branch -D` commands to run from your **primary** checkout (a worktree cannot remove itself while you're inside it).
+
 ### Upgrading an existing project
 
 If you installed this add-on before worktree support was added, re-run the installation command to pick up the fixes:
