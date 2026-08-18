@@ -7,6 +7,7 @@ services:
             - PACKAGE_NAME=vendor/custom-extension-key
             - TYPO3_VERSIONS=12 13 14
             - SYMLINK_EXCLUSIONS=Documentation Documentation-GENERATED-temp var vendor public
+            - TYPO3_CONTEXT=Development
 
             # TYPO3 v11 and v12 config
             - TYPO3_INSTALL_DB_DRIVER=mysqli

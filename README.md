@@ -140,7 +140,19 @@ $finder = (new PhpCsFixer\Finder())
     ->exclude('.ddev');
 ```
 
-Every installed instance runs with `TYPO3_CONTEXT=Development`. Override it per project with `ddev config --web-environment-add="TYPO3_CONTEXT=Production"` (followed by `ddev restart`) if you need production-context parity.
+### Application context
+
+Every installed instance runs with `TYPO3_CONTEXT=Development`, set via `docker-compose.typo3-setup.yaml`. `ddev config --web-environment-add=TYPO3_CONTEXT=Production` does **not** override it - add-on-provided compose files are merged after DDEV's own config-derived one, so the add-on's value always wins. To override it, add your own compose file that sorts after `docker-compose.typo3-setup.yaml` (survives `ddev add-on get` updates, since it isn't a file the add-on manages):
+
+```yaml
+# .ddev/docker-compose.zz-context-override.yaml
+services:
+  web:
+    environment:
+      - TYPO3_CONTEXT=Production
+```
+
+Then run `ddev restart` to apply it.
 
 ### Fixtures
 

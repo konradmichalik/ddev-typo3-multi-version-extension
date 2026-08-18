@@ -457,13 +457,6 @@ function setup_environment() {
         export TYPO3_SERVER_TYPE="other"
     fi
     export TYPO3_INSTALL_WEB_SERVER_CONFIG="$TYPO3_SERVER_TYPE"
-    # Default to Development for a throwaway dev environment. Left as a
-    # fallback (not hardcoded here or in docker-compose.typo3-setup.yaml) so
-    # a project-level `ddev config --web-environment-add=TYPO3_CONTEXT=...`
-    # can still override it - add-on compose files are layered on top of
-    # DDEV's own config-derived one, so a hardcoded value here would always
-    # win over that override.
-    export TYPO3_CONTEXT="${TYPO3_CONTEXT:-Development}"
     mysql -uroot -proot -e "DROP DATABASE IF EXISTS $DATABASE"
 }
 
