@@ -130,6 +130,16 @@ For install steps that don't fit a variable in `project.sh`, add a script at `.d
 | `post-typo3-setup` | After TYPO3 itself is set up, before fixture import |
 | `post-install` | Last, after fixtures, site configs and the schema update |
 
+### Avoiding CS-fixer churn on `.ddev/`
+
+If your project runs `php-cs-fixer` (or a similar tool) on the whole repository, it will also reformat the files this add-on manages under `.ddev/` to match *your* project's rules - which may differ from the rules this add-on's own files were written with. That produces a spurious diff on every `ddev add-on get` update, and every `composer cgl`/fixer run dirties files that aren't supposed to be edited locally anyway. Exclude `.ddev/` from your fixer's paths to avoid this:
+
+```php
+$finder = (new PhpCsFixer\Finder())
+    ->in(__DIR__)
+    ->exclude('.ddev');
+```
+
 ### Fixtures
 
 During installation, fixture data from `Tests/Acceptance/Fixtures/` is automatically imported. The following types are supported:
