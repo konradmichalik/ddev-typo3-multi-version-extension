@@ -98,6 +98,20 @@ JSON
   health_checks
 }
 
+@test "install from directory on nginx-fpm" {
+  set -eu -o pipefail
+  run ddev config --webserver-type=nginx-fpm
+  assert_success
+  run ddev restart -y
+  assert_success
+
+  run ddev add-on get "${DIR}"
+  assert_success
+  run ddev restart -y
+  assert_success
+  health_checks
+}
+
 # bats test_tags=release
 @test "install from release" {
   set -eu -o pipefail

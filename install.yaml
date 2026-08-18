@@ -3,8 +3,8 @@ name: typo3-multi-version-extension
 pre_install_actions:
   - |
     #ddev-description:Check for incompatible server type
-    if [ "${DDEV_WEBSERVER_TYPE}" != "apache-fpm" ]; then
-      echo "This package only works with the apache webserver";
+    if [ "${DDEV_WEBSERVER_TYPE}" != "apache-fpm" ] && [ "${DDEV_WEBSERVER_TYPE}" != "nginx-fpm" ]; then
+      echo "This package only works with the apache-fpm or nginx-fpm webserver type";
       exit 1;
     fi
 
@@ -14,6 +14,7 @@ project_files:
   - .setup/Tests/Acceptance/Fixtures/
   - apache/10.conf
   - apache/20.conf
+  - nginx_full/nginx-site.conf
   - commands/host/launch
   - commands/web/.install-11
   - commands/web/.install-12
@@ -71,7 +72,7 @@ post_install_actions:
     cat <<EOF >${DDEV_APPROOT}/.ddev/config.typo3-setup.yaml
     type: php
     docroot: .Build
-    webserver_type: apache-fpm
+    webserver_type: ${DDEV_WEBSERVER_TYPE}
     additional_hostnames:
       - 11.${DDEV_PROJECT}
       - 12.${DDEV_PROJECT}

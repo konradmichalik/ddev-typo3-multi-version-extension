@@ -284,6 +284,17 @@ function setup_environment() {
     else
         export TYPO3_BIN="$BASE_PATH/vendor/bin/typo3"
     fi
+    # Derived at runtime rather than hardcoded, so the same setup works
+    # whether the project uses apache-fpm or nginx-fpm. TYPO3's setup/
+    # install:setup commands only generate a webserver config file for
+    # "apache" (.htaccess) or "iis" (web.config) - nginx has no per-directory
+    # config file, so anything else is "other" (generates none).
+    if [ "$DDEV_WEBSERVER_TYPE" == "apache-fpm" ]; then
+        export TYPO3_SERVER_TYPE="apache"
+    else
+        export TYPO3_SERVER_TYPE="other"
+    fi
+    export TYPO3_INSTALL_WEB_SERVER_CONFIG="$TYPO3_SERVER_TYPE"
     mysql -uroot -proot -e "DROP DATABASE IF EXISTS $DATABASE"
 }
 

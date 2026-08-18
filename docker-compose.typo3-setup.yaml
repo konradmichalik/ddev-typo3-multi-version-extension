@@ -19,7 +19,6 @@ services:
             - TYPO3_INSTALL_ADMIN_PASSWORD=Password1!
             - TYPO3_INSTALL_SITE_NAME=EXT:custom-extension-key Dev Environment
             - TYPO3_INSTALL_SITE_SETUP_TYPE=site
-            - TYPO3_INSTALL_WEB_SERVER_CONFIG=apache
 
             # TYPO3 v13 and v14 config
             - TYPO3_DB_DRIVER=mysqli
@@ -30,4 +29,3 @@ services:
             - TYPO3_SETUP_ADMIN_USERNAME=admin
             - TYPO3_SETUP_ADMIN_PASSWORD=Password1!
             - TYPO3_PROJECT_NAME=EXT:custom-extension-key Dev Environment
-            - TYPO3_SERVER_TYPE=apache
