@@ -76,7 +76,6 @@ post_install_actions:
     cat <<EOF >${DDEV_APPROOT}/.ddev/config.typo3-setup.yaml
     type: php
     docroot: .Build
-    webserver_type: ${DDEV_WEBSERVER_TYPE}
     additional_hostnames:
       - 11.${DDEV_PROJECT}
       - 12.${DDEV_PROJECT}
