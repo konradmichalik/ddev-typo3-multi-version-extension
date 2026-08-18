@@ -65,6 +65,12 @@ For a detailed console output, use the following command:
 ddev install 12 -v
 ````
 
+### Updating
+
+Run `ddev add-on get konradmichalik/ddev-typo3-multi-version-extension && ddev restart` again to pick up add-on updates in an existing project.
+
+Files that ship with a `#ddev-generated` marker (e.g. `.ddev/.setup/scripts/utils.sh`, `.ddev/.setup/templates/index.php`, the `commands/web/*` wrappers) are overwritten on every update. If you need to customize one of them, remove that marker line from your project's copy — DDEV will then leave the file alone on future updates.
+
 ## ⚙ Configuration
 
 By default, a blank TYPO3 instance will be installed for each version. They are only two extensions installed:

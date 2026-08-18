@@ -1,5 +1,6 @@
 #!/bin/bash
 
+## #ddev-generated
 ## Description: Exec command for all TYPO3 instances.
 ## Usage: all
 ## Example: "ddev all composer du -o" or "ddev all typo3 cache:flush"
