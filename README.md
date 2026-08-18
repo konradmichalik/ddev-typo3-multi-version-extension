@@ -95,7 +95,7 @@ During installation, fixture data from `Tests/Acceptance/Fixtures/` is automatic
 |------|----------|-------------|
 | XML | `Tests/Acceptance/Fixtures/*.xml` | TYPO3 export files, imported via `impexp:import` |
 | SQL | `Tests/Acceptance/Fixtures/*.sql` | Raw SQL files, imported directly into the database |
-| Site config | `Tests/Acceptance/Fixtures/sites/<site-name>/` | Site configuration directories copied to `config/sites/`. Use `VERSION_PLACEHOLDER` in `config.yaml` to insert the TYPO3 version automatically. Use a relative `base: /` - an absolute hostname in `base` breaks as soon as the project's hostname changes (e.g. in a `git worktree` checkout). |
+| Site config | `Tests/Acceptance/Fixtures/sites/<site-name>/` | Site configuration directories copied to `config/sites/`. In `config.yaml`, `__VERSION__` is replaced with the TYPO3 version and `__SITENAME__` with the project's `DDEV_SITENAME`. Use a relative `base: /` - an absolute hostname in `base` breaks as soon as the project's hostname changes (e.g. in a `git worktree` checkout). The older `VERSION_PLACEHOLDER` placeholder still works but is deprecated in favor of `__VERSION__`. |
 | Shell scripts | `Tests/Acceptance/Fixtures/*.sh` | Executed during setup (failures are logged but don't abort the installation) |
 
 ## 🧩 Classic mode (non-Composer)

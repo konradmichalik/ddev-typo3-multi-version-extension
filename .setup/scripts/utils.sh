@@ -600,7 +600,9 @@ function import_sql_data() {
 # Function to import site configuration YAML fixtures.
 # It copies each directory under Tests/Acceptance/Fixtures/sites/ to the
 # TYPO3 site configuration path for the current version, replacing
-# VERSION_PLACEHOLDER with the actual version number in the config.yaml.
+# __VERSION__ with the TYPO3 version and __SITENAME__ with DDEV_SITENAME
+# in config.yaml. VERSION_PLACEHOLDER is still supported for backwards
+# compatibility with fixtures written before __VERSION__ was introduced.
 function import_site_configs() {
     FIXTURE_DIR="/var/www/html/Tests/Acceptance/Fixtures/sites"
 
@@ -625,7 +627,11 @@ function import_site_configs() {
             mkdir -p "$TARGET_BASE/$SITE_NAME"
             cp -r "$SITE_DIR"* "$TARGET_BASE/$SITE_NAME/"
             if [ -f "$TARGET_BASE/$SITE_NAME/config.yaml" ]; then
-                sed -i "s/VERSION_PLACEHOLDER/$VERSION/g" "$TARGET_BASE/$SITE_NAME/config.yaml"
+                sed -i \
+                    -e "s/__VERSION__/$VERSION/g" \
+                    -e "s/VERSION_PLACEHOLDER/$VERSION/g" \
+                    -e "s/__SITENAME__/$DDEV_SITENAME/g" \
+                    "$TARGET_BASE/$SITE_NAME/config.yaml"
             fi
         fi
     done
