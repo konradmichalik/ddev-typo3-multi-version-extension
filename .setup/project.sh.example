@@ -1,3 +1,4 @@
+#ddev-generated
 # .ddev/.setup/project.sh — repo-owned customizations for `ddev install`.
 #
 # Copy this file to .ddev/.setup/project.sh and adjust it. It is sourced by

@@ -58,7 +58,7 @@ post_install_actions:
     if [ -f ${DDEV_APPROOT}/composer.json ]; then
       composer_name=$(jq -r '.name' ${DDEV_APPROOT}/composer.json)
       if [ ! -z "$composer_name" ]; then
-    
+
         if [[ "$OSTYPE" == "darwin"* ]]; then
           find ${DDEV_APPROOT}/.ddev -type f -exec sed -i '' -e "s|vendor/custom-extension-key|${composer_name}|g" {} +
         else
@@ -76,7 +76,7 @@ post_install_actions:
       echo "DDEV_PROJECT environment variable is not set."
       exit 1
     fi
-    
+
     if [[ "$OSTYPE" == "darwin"* ]]; then
       find ${DDEV_APPROOT}/.ddev -type f -exec sed -i '' -e "s/custom-extension-key/${extension_name}/g" {} +   
       find ${DDEV_APPROOT}/.ddev -type f -exec sed -i '' -e "s/custom_extension_key/${extension_key}/g" {} + 
@@ -84,7 +84,7 @@ post_install_actions:
       find ${DDEV_APPROOT}/.ddev -type f -exec sed -i'' -e "s/custom-extension-key/${extension_name}/g" {} +    
       find ${DDEV_APPROOT}/.ddev -type f -exec sed -i'' -e "s/custom_extension_key/${extension_key}/g" {} +
     fi
-    
+
     echo "Set extension key to ${extension_key} and extension name to ${extension_name} in"
     echo " - .ddev/docker-compose.typo3-setup.yaml"
   - |
@@ -105,7 +105,7 @@ post_install_actions:
 
   - |
     #ddev-description:Create Tests folder
-    
+
     if [ -d "${DDEV_APPROOT}/.ddev/.setup/Tests/Acceptance" ]; then
       mkdir -p "${DDEV_APPROOT}/Tests/Acceptance"
       # BSD cp (macOS) exits 1 under -n as soon as it skips any existing file,
