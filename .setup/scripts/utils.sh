@@ -221,6 +221,7 @@ function pre_setup() {
   else
     install_start
     install_composer_packages
+    run_hook "post-composer"
   fi
 }
 
@@ -256,6 +257,8 @@ function post_setup() {
     fi
   _done
 
+  run_hook "post-typo3-setup"
+
   if [ -n "$DEMO_PROFILE" ]; then
     _progress " ├─ Install demo content"
       install_demo
@@ -271,6 +274,8 @@ function post_setup() {
   _progress " ├─ Update TYPO3"
     update_typo3
   _done
+  run_hook "post-install"
+
   printf " └─ \033[33mTYPO3 %s setup completed!\033[0m Open in your browser: https://%s.%s.%s\n" \
     "$VERSION" "$VERSION" "$DDEV_SITENAME" "$DDEV_TLD"
 }
@@ -371,6 +376,29 @@ function install_demo() {
     esac
 }
 
+# Function to run an optional, repo-owned install hook if it exists.
+# Hooks live at .ddev/.setup/hooks/<name>.sh and are sourced (not executed as
+# a subprocess) so they have access to $VERSION, $BASE_PATH, $TYPO3_BIN,
+# $DATABASE, $EXTENSION_KEY and the message/_progress/_done helpers. Because
+# they are sourced into a caller running under `set -e`, a failing command in
+# a hook aborts the install and its captured output is replayed - unlike the
+# best-effort Tests/Acceptance/Fixtures/*.sh scripts, a hook failure is not
+# swallowed.
+#
+# Supported hook names: pre-install, post-composer, post-typo3-setup, post-install.
+function run_hook() {
+    local hook_name="$1"
+    local hook_file="/var/www/html/.ddev/.setup/hooks/${hook_name}.sh"
+
+    if [ ! -f "$hook_file" ]; then
+        return 0
+    fi
+
+    _progress " ├─ Hook: $hook_name"
+      source "$hook_file"
+    _done
+}
+
 # Function to display an introductory message for the TYPO3 version.
 # It prints a formatted message with the TYPO3 version in magenta color.
 function intro_typo3() {
@@ -386,6 +414,8 @@ function intro_typo3() {
 # sets up the environment, creates symlinks for the main and additional extensions,
 # and sets up Composer for the TYPO3 installation.
 function install_start() {
+    run_hook "pre-install"
+
     rm -rf /var/www/html/.Build/$VERSION/*
     _progress " ├─ Setup environment"
       setup_environment
