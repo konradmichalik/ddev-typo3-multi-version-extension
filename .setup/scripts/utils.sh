@@ -259,7 +259,8 @@ function post_setup() {
   _progress " ├─ Update TYPO3"
     update_typo3
   _done
-  printf " └─ \033[33mTYPO3 $VERSION setup completed!\033[0m Open in your browser: https://$VERSION.${EXTENSION_NAME}.ddev.site\n"
+  printf " └─ \033[33mTYPO3 %s setup completed!\033[0m Open in your browser: https://%s.%s.%s\n" \
+    "$VERSION" "$VERSION" "$DDEV_SITENAME" "$DDEV_TLD"
 }
 
 # Function to perform post-setup tasks for a classic (non-Composer) install.
