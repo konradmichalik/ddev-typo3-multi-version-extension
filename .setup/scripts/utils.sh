@@ -380,7 +380,8 @@ function setup_environment() {
 function create_symlinks_main_extension() {
     local target="${1:-$BASE_PATH/packages/$EXTENSION_KEY}"
     mkdir -p "$target"
-    local exclusions=(".*" "Documentation" "Documentation-GENERATED-temp" "var")
+    local exclusions=()
+    read -r -a exclusions <<< "${SYMLINK_EXCLUSIONS:-Documentation Documentation-GENERATED-temp var vendor public}"
     for item in ./*; do
         local base_name; base_name=$(basename "$item")
         for exclusion in "${exclusions[@]}"; do
