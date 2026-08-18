@@ -11,6 +11,7 @@ pre_install_actions:
 project_files:
   - .setup/scripts/utils.sh
   - .setup/scripts/write-git-info.sh
+  - .setup/project.sh.example
   - .setup/templates/index.php
   - .setup/Tests/Acceptance/Fixtures/
   - apache/10.conf

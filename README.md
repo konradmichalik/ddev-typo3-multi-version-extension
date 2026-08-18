@@ -105,6 +105,20 @@ Profiles:
 | `bootstrap` | Installs [`bk2k/bootstrap-package`](https://packagist.org/packages/bk2k/bootstrap-package) only - a themed but otherwise empty site. Works on every supported version. |
 | `custom` | Installs no demo package; relies entirely on your own `Tests/Acceptance/Fixtures/` fixtures (see below). |
 
+### Project-specific customizations
+
+Copy [.ddev/.setup/project.sh.example](.setup/project.sh.example) to `.ddev/.setup/project.sh` to customize the install without touching `utils.sh` - `project.sh` isn't managed by the add-on, so it survives `ddev add-on get` upgrades. Supported variables:
+
+| Variable | Effect |
+|---|---|
+| `ADDITIONAL_PACKAGES` | Extra composer packages installed alongside the base install |
+| `SITEPACKAGE_PACKAGES` | Replaces the default `test/sitepackage` when set |
+| `COMPOSER_CONFIG` | Extra `composer config` entries |
+| `TYPO3_SETTINGS` | Extra `typo3 configuration:set` calls |
+| `FIXTURE_EXTENSION_DIRS` | Extra directories (besides `Tests/Acceptance/Fixtures/packages`) whose subdirectories get symlinked in as additional extensions |
+
+`$VERSION` in a package constraint expands per version at install time - write it single-quoted (e.g. `'typo3/cms-reports:^$VERSION'`) so it isn't expanded early.
+
 ### Fixtures
 
 During installation, fixture data from `Tests/Acceptance/Fixtures/` is automatically imported. The following types are supported:

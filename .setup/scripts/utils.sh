@@ -7,6 +7,12 @@
 # disable the spinner and stream all command output live.
 VERBOSE="${VERBOSE:-0}"
 
+# Repo-owned customizations (composer packages, TYPO3 settings, ...) that
+# survive `ddev add-on get` upgrades. See .setup/project.sh.example.
+if [ -f "/var/www/html/.ddev/.setup/project.sh" ]; then
+    source /var/www/html/.ddev/.setup/project.sh
+fi
+
 # Internal state shared between _progress, _done and _progress_exit_trap.
 SPINNER_PID=0
 PROGRESS_ACTIVE=0
@@ -445,6 +451,12 @@ function create_symlinks_additional_extensions() {
     for dir in Tests/Acceptance/Fixtures/packages/*/; do
         ln -sr "$dir" "$BASE_PATH/packages/$(basename "$dir")"
     done
+
+    for extra_dir in "${FIXTURE_EXTENSION_DIRS[@]}"; do
+        for dir in "$extra_dir"/*/; do
+            [ -d "$dir" ] && ln -sr "$dir" "$BASE_PATH/packages/$(basename "$dir")"
+        done
+    done
 }
 
 # Function to start a classic (non-Composer) installation for the current
@@ -532,6 +544,10 @@ function setup_composer() {
     composer config repositories.packages path 'packages/*' --working-dir "$BASE_PATH"
     composer config --no-interaction allow-plugins.typo3/cms-composer-installers true --working-dir "$BASE_PATH"
     composer config --no-interaction allow-plugins.typo3/class-alias-loader true --working-dir "$BASE_PATH"
+
+    for entry in "${COMPOSER_CONFIG[@]}"; do
+        composer config --no-interaction $entry --working-dir "$BASE_PATH"
+    done
 }
 
 # Function to set up TYPO3 configuration.
@@ -550,6 +566,10 @@ function setup_typo3() {
     $TYPO3_BIN configuration:set 'MAIL/transport_smtp_server' 'localhost:1025'
     $TYPO3_BIN configuration:set 'GFX/processor' 'ImageMagick'
     $TYPO3_BIN configuration:set 'GFX/processor_path' '/usr/bin/'
+
+    for entry in "${TYPO3_SETTINGS[@]}"; do
+        eval "$TYPO3_BIN configuration:set $entry"
+    done
 }
 
 # Function to update TYPO3.
@@ -562,11 +582,25 @@ function update_typo3() {
 # Function to install required Composer packages for TYPO3.
 function install_composer_packages() {
   _progress " ├─ Install composer packages"
-    composer req typo3/cms-base-distribution:"^$VERSION" \
-            $PACKAGE_NAME:'*@dev' \
-            test/sitepackage:'*@dev' \
-            helhum/typo3-console:'*' \
-            --no-progress -n -d $BASE_PATH
+    local packages=(
+        "typo3/cms-base-distribution:^$VERSION"
+        "$PACKAGE_NAME:*@dev"
+        "helhum/typo3-console:*"
+    )
+
+    if [ ${#SITEPACKAGE_PACKAGES[@]} -gt 0 ]; then
+        for entry in "${SITEPACKAGE_PACKAGES[@]}"; do
+            eval "packages+=(\"$entry\")"
+        done
+    else
+        packages+=("test/sitepackage:*@dev")
+    fi
+
+    for entry in "${ADDITIONAL_PACKAGES[@]}"; do
+        eval "packages+=(\"$entry\")"
+    done
+
+    composer req "${packages[@]}" --no-progress -n -d $BASE_PATH
   _done
 }
 
