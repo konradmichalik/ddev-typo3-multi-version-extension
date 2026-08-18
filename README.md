@@ -140,6 +140,8 @@ $finder = (new PhpCsFixer\Finder())
     ->exclude('.ddev');
 ```
 
+Every installed instance runs with `TYPO3_CONTEXT=Development`. Override it per project with `ddev config --web-environment-add="TYPO3_CONTEXT=Production"` (followed by `ddev restart`) if you need production-context parity.
+
 ### Fixtures
 
 During installation, fixture data from `Tests/Acceptance/Fixtures/` is automatically imported. The following types are supported:
