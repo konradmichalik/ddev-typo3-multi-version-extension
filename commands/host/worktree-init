@@ -13,8 +13,9 @@ if [ ! -f "$COMPOSE_FILE" ]; then
     exit 1
 fi
 
-typo3_versions=$(grep -oE 'TYPO3_VERSIONS=[0-9 ]+' "$COMPOSE_FILE" | head -1 | cut -d= -f2)
-typo3_versions=${typo3_versions:-"11 12 13 14"}
+if ! typo3_versions=$(grep -oE 'TYPO3_VERSIONS=[0-9 ]+' "$COMPOSE_FILE" | head -1 | cut -d= -f2) || [ -z "$typo3_versions" ]; then
+    typo3_versions="12 13 14"
+fi
 
 override_file=".ddev/config.zz-worktree.local.yaml"
 
