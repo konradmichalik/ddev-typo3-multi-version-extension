@@ -82,6 +82,8 @@ If you need more extensions for your setup, you can place them in the `Tests/Acc
 > [!NOTE]
 > You may not need all TYPO3 versions? You can remove the unwanted versions from the `TYPO3_VERSIONS` variable in [.ddev/docker-compose.typo3-setup.yaml](docker-compose.typo3-setup.yaml).
 
+Items from your main extension's root directory are symlinked into the TYPO3 instance, except the ones listed in the `SYMLINK_EXCLUSIONS` variable in [.ddev/docker-compose.typo3-setup.yaml](docker-compose.typo3-setup.yaml). It defaults to `Documentation Documentation-GENERATED-temp var vendor public`, so a local `vendor/` or `public/` directory in your extension repository is not linked into the instance's own composer/web-root structure.
+
 ### Fixtures
 
 During installation, fixture data from `Tests/Acceptance/Fixtures/` is automatically imported. The following types are supported:
