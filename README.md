@@ -115,9 +115,11 @@ Copy [.ddev/.setup/project.sh.example](.setup/project.sh.example) to `.ddev/.set
 | `SITEPACKAGE_PACKAGES` | Replaces the default `test/sitepackage` when set |
 | `COMPOSER_CONFIG` | Extra `composer config` entries |
 | `TYPO3_SETTINGS` | Extra `typo3 configuration:set` calls |
-| `FIXTURE_EXTENSION_DIRS` | Extra directories (besides `Tests/Acceptance/Fixtures/packages`) whose subdirectories get symlinked in as additional extensions |
+| `FIXTURE_EXTENSION_DIRS` | Extra directories (besides `Tests/Acceptance/Fixtures/packages`) whose subdirectories get symlinked into Composer's local package repository |
 
 `$VERSION` in a package constraint expands per version at install time - write it single-quoted (e.g. `'typo3/cms-reports:^$VERSION'`) so it isn't expanded early.
+
+Symlinking alone only makes a package *discoverable* - it still needs to be required by name in `ADDITIONAL_PACKAGES` (or `SITEPACKAGE_PACKAGES`) to actually get installed and activated, the same way the default `test/sitepackage` fixture works.
 
 ### Install hooks
 
