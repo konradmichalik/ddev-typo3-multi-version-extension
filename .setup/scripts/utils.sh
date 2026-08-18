@@ -328,6 +328,7 @@ function classic_post_setup() {
     # env-driven, reuses the existing TYPO3_DB_* / TYPO3_SETUP_* variables.
     # In classic mode this writes to typo3conf/system/settings.php.
     $TYPO3_BIN setup -n \
+        --server-type="$TYPO3_SERVER_TYPE" \
         --dbname="$DATABASE" \
         --password="$TYPO3_DB_PASSWORD" \
         --admin-user-password="$TYPO3_SETUP_ADMIN_PASSWORD" \
@@ -361,6 +362,9 @@ function classic_post_setup() {
     classic_configuration_set 'FE/debug' true
     classic_configuration_set 'SYS/devIPmask' '*'
     classic_configuration_set 'SYS/displayErrors' 1
+    for entry in "${TYPO3_SETTINGS[@]}"; do
+        eval "classic_configuration_set $entry"
+    done
   _done
 
   _progress " ├─ Import data"
@@ -483,18 +487,27 @@ function setup_environment() {
     else
         export TYPO3_BIN="$BASE_PATH/vendor/bin/typo3"
     fi
-    # Derived at runtime rather than hardcoded, so the same setup works
-    # whether the project uses apache-fpm or nginx-fpm. TYPO3's setup/
-    # install:setup commands only generate a webserver config file for
-    # "apache" (.htaccess) or "iis" (web.config) - nginx has no per-directory
-    # config file, so anything else is "other" (generates none).
+    compute_typo3_server_type
+    export TYPO3_INSTALL_WEB_SERVER_CONFIG="$TYPO3_SERVER_TYPE"
+    mysql -uroot -proot -e "DROP DATABASE IF EXISTS $DATABASE"
+}
+
+# Function to derive TYPO3's own apache/iis/other webserver type from
+# DDEV_WEBSERVER_TYPE, exporting it as TYPO3_SERVER_TYPE. Derived at runtime
+# rather than hardcoded, so the same setup works whether the project uses
+# apache-fpm or nginx-fpm. Consumed two ways: composer mode passes it as
+# TYPO3_INSTALL_WEB_SERVER_CONFIG (helhum/typo3-console only generates a
+# webserver config file for "apache" (.htaccess) or "iis" (web.config) -
+# nginx has no per-directory config file, so anything else is "other",
+# which generates none); classic mode passes it as --server-type to TYPO3
+# core's own setup command, which requires one of apache/iis/other and
+# throws a TypeError if none is given non-interactively.
+function compute_typo3_server_type() {
     if [ "$DDEV_WEBSERVER_TYPE" == "apache-fpm" ]; then
         export TYPO3_SERVER_TYPE="apache"
     else
         export TYPO3_SERVER_TYPE="other"
     fi
-    export TYPO3_INSTALL_WEB_SERVER_CONFIG="$TYPO3_SERVER_TYPE"
-    mysql -uroot -proot -e "DROP DATABASE IF EXISTS $DATABASE"
 }
 
 # Function to create symlinks for the main extension.
@@ -567,6 +580,7 @@ function classic_setup_environment() {
     echo "classic" > "$BASE_PATH/.install-mode"
     export DATABASE="database_$VERSION"
     export TYPO3_BIN="$BASE_PATH/public/typo3/sysext/core/bin/typo3"   # core binary, NOT vendor/bin
+    compute_typo3_server_type
     mysql -uroot -proot -e "DROP DATABASE IF EXISTS $DATABASE"
 }
 

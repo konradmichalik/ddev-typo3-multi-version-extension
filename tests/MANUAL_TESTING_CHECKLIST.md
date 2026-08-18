@@ -18,7 +18,7 @@ Exploratory coverage against a real extension, complementing `test.bats`. Check 
 
 - [x] apache-fpm project — `typo3-dump-server`, 2026-08-18
 - [x] nginx-fpm project (`nginx_full/nginx-site.conf`, pretty-URL routing through `index.php`, no stray `.htaccess`/`web.config`) — `typo3-dump-server`, 2026-08-18
-- [ ] Apache vhost independent of project name (PR #39) on a differently-named project
+- [x] Apache vhost independent of project name (PR #39): `ServerName ${DDEV_SITENAME}.${DDEV_TLD}` resolves dynamically, not baked in at install time - verified via Host-header test (correct host → 200, unrelated host → 404) — `typo3-dump-server`, 2026-08-18
 
 ## Classic mode (`--classic`)
 
@@ -30,7 +30,7 @@ Exploratory coverage against a real extension, complementing `test.bats`. Check 
 - [x] Classic mode on TYPO3 12 — `typo3-dump-server`, 2026-08-18
 - [x] `--classic` rejected for `all` and for TYPO3 11 (documented guards) — `typo3-dump-server`, 2026-08-18
 - [x] Switching a version slot from classic back to composer mode (`ddev install <v>` without the flag) — `typo3-dump-server`, 2026-08-18
-- [ ] `project.sh`'s `TYPO3_SETTINGS` applied in classic mode (**known gap — not implemented**)
+- [x] `project.sh`'s `TYPO3_SETTINGS` applied in classic mode - implemented (was a real gap) and verified: `$DDEV_SITENAME` expansion and quoted-string values both resolve correctly — `typo3-dump-server`, 2026-08-18
 
 ## Demo content (`--demo`)
 
@@ -68,7 +68,7 @@ Exploratory coverage against a real extension, complementing `test.bats`. Check 
 - [x] Primary and worktree checkout running simultaneously — `typo3-dump-server`, 2026-08-18
 - [x] Install a TYPO3 instance inside a worktree checkout — `typo3-dump-server`, 2026-08-18
 - [x] `worktree-remove` tears down containers/images/network — `typo3-dump-server`, 2026-08-18
-- [ ] `worktree-remove` actually removes its hostnames from `/etc/hosts` (both attempts hit a local sudo/TTY limitation, never confirmed)
+- [x] `worktree-remove` actually removes its hostnames from `/etc/hosts` - confirmed absent after removal (previous attempts only hit a sudo/TTY limitation running non-interactively, not an add-on bug) — `typo3-dump-server`, 2026-08-18
 - [x] Three or more worktrees running in parallel (4 total incl. primary, unique hostnames, no collisions) — `typo3-dump-server`, 2026-08-18
 - [x] Started 3 new worktree projects while the primary kept running (the exact scenario the router 404 gotcha describes) — no 404 observed this run; timing-dependent, not force-reproduced — `typo3-dump-server`, 2026-08-18
 
@@ -82,4 +82,4 @@ Exploratory coverage against a real extension, complementing `test.bats`. Check 
 
 - [x] `ddev add-on get` removal (`removal_actions` — config/hooks/setup directory cleanup) — `typo3-dump-server`, 2026-08-18
 - [x] `TYPO3_CONTEXT` override via a project-owned `zz`-sorted compose file — `typo3-dump-server`, 2026-08-18
-- [ ] `composer.json` normalization / CGL still passes after add-on-driven edits to a project's own files
+- [x] `composer.json` normalization / CGL still passes after add-on-driven edits to a project's own files — N/A by design: verified via code review that no install.yaml action ever writes outside `.ddev/` (the `find ${DDEV_APPROOT}/.ddev` substitutions are scoped there; composer.json is only *read* for its `name`). The one real edit to `typo3-dump-server`'s own composer.json today (vendor-bundler dev-dependency, PR #64) was a deliberate manual step, not an automatic add-on action, and passed the project's own `cgl` CI job — 2026-08-18
