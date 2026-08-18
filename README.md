@@ -87,6 +87,24 @@ If you need more extensions for your setup, you can place them in the `Tests/Acc
 
 Items from your main extension's root directory are symlinked into the TYPO3 instance, except the ones listed in the `SYMLINK_EXCLUSIONS` variable in [.ddev/docker-compose.typo3-setup.yaml](docker-compose.typo3-setup.yaml). It defaults to `Documentation Documentation-GENERATED-temp var vendor public`, so a local `vendor/` or `public/` directory in your extension repository is not linked into the instance's own composer/web-root structure.
 
+### Demo content
+
+Pass `--demo` to `ddev install` to populate the instance with a demo site instead of a single blank page. The demo step always drops and rebuilds the instance rather than layering onto an existing one, so re-running it is deterministic.
+
+```shell
+ddev install 13 --demo
+ddev install 13 --demo=bootstrap
+ddev install all --demo
+```
+
+Profiles:
+
+| Profile | Result |
+|---|---|
+| `introduction` (default) | Installs [`typo3/cms-introduction`](https://extensions.typo3.org/extension/introduction) and removes the generated `main` site, since the Introduction Package brings its own. **Not available on TYPO3 14** - no released version supports it yet, so `--demo`/`--demo=introduction` automatically falls back to the `bootstrap` profile on 14 with a message. |
+| `bootstrap` | Installs [`bk2k/bootstrap-package`](https://packagist.org/packages/bk2k/bootstrap-package) only - a themed but otherwise empty site. Works on every supported version. |
+| `custom` | Installs no demo package; relies entirely on your own `Tests/Acceptance/Fixtures/` fixtures (see below). |
+
 ### Fixtures
 
 During installation, fixture data from `Tests/Acceptance/Fixtures/` is automatically imported. The following types are supported:

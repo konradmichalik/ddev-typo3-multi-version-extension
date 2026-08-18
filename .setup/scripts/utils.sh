@@ -250,6 +250,12 @@ function post_setup() {
     fi
   _done
 
+  if [ -n "$DEMO_PROFILE" ]; then
+    _progress " ├─ Install demo content"
+      install_demo
+    _done
+  fi
+
   _progress " ├─ Import data"
     import_xml_data
     import_sql_data
@@ -319,6 +325,44 @@ function classic_post_setup() {
     $TYPO3_BIN database:updateschema
     $TYPO3_BIN cache:flush
   _done
+}
+
+# Function to install demo content for the current TYPO3 version, controlled
+# by the DEMO_PROFILE environment variable (set via `ddev install --demo`).
+#
+# Profiles:
+#   introduction (default) - installs typo3/cms-introduction and removes the
+#     generated "main" site, since the Introduction Package brings its own.
+#     Not available on TYPO3 14 (no released version supports it yet) - falls
+#     back to the bootstrap profile with a message instead of failing.
+#   bootstrap - installs bk2k/bootstrap-package only, for a themed but empty
+#     site. Works on every supported version, including 14.
+#   custom - installs no package here; relies entirely on whatever the repo
+#     already provides under Tests/Acceptance/Fixtures/ (XML/SQL/site config/
+#     shell script fixtures, imported later in post_setup()).
+function install_demo() {
+    local profile="${DEMO_PROFILE:-introduction}"
+
+    if [ "$profile" == "introduction" ] && [ "$VERSION" == "14" ]; then
+        message yellow "typo3/cms-introduction has no TYPO3 14 release yet - falling back to the bootstrap profile."
+        profile="bootstrap"
+    fi
+
+    case "$profile" in
+        introduction)
+            composer req typo3/cms-introduction:'*' --no-progress -n -d "$BASE_PATH"
+            $TYPO3_BIN extension:setup --extension=introduction
+            rm -rf "$BASE_PATH/config/sites/main"
+            ;;
+        bootstrap)
+            composer req bk2k/bootstrap-package:'*' --no-progress -n -d "$BASE_PATH"
+            ;;
+        custom) ;;
+        *)
+            message red "Unknown demo profile '$profile'. Supported: introduction, bootstrap, custom."
+            return 1
+            ;;
+    esac
 }
 
 # Function to display an introductory message for the TYPO3 version.
