@@ -9,10 +9,12 @@ two extensions active:
 Use the sitepackage to exercise your main extension's features. Adjust it to
 your needs in `Tests/Acceptance/Fixtures/packages/sitepackage/`.
 
-If you need more extensions, place them in `Tests/Acceptance/Fixtures/packages`
-or adjust the `ddev install` command - within e.g. the
-[`.install-12`](../commands/web/.install-12) file, you can adjust the
-`composer require` command to fit your needs.
+If you need more extensions, place them under `Tests/Acceptance/Fixtures/packages`
+(or an extra directory listed in [`FIXTURE_EXTENSION_DIRS`](#projectsh)) and
+require them by name via [`ADDITIONAL_PACKAGES` or `SITEPACKAGE_PACKAGES`](#projectsh)
+in `project.sh`. Don't edit `commands/web/.install-12` and similar files
+directly - they carry a `#ddev-generated` marker and are overwritten on the
+next `ddev add-on get` update (see [Updating](../README.md#updating)).
 
 ## `TYPO3_VERSIONS`
 

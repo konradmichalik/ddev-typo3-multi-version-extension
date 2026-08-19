@@ -51,12 +51,13 @@ mirrors the same bundling step for TER releases.
 
 ## Fixture packages without `ext_emconf.php`
 
-TYPO3's classic-mode package discovery only recognizes directories containing
-an `ext_emconf.php`. The default `sitepackage` fixture (and any project
-fixture under `Tests/Acceptance/Fixtures/packages/`) ships only a
+On TYPO3 v12/v13, classic-mode package discovery only recognizes directories
+containing an `ext_emconf.php`. The default `sitepackage` fixture (and any
+project fixture under `Tests/Acceptance/Fixtures/packages/`) ships only a
 `composer.json`, so this add-on generates a minimal `ext_emconf.php` for it
 automatically in classic mode - the fixture's own source files are never
-modified.
+modified. On TYPO3 v14, package discovery reads `composer.json` natively, so
+the generated file is redundant there but still harmless.
 
 ## Notes
 

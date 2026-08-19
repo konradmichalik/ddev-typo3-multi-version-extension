@@ -15,7 +15,7 @@ on every version at once, without reinstalling anything.
 ## ✨ Features
 
 - [**Parallel TYPO3 instances**](docs/commands.md): TYPO3 12, 13 and 14 run side by side by default under `.Build/<version>/`; TYPO3 11 can be re-enabled (see [Configuration](docs/configuration.md))
-- [**Classic (non-Composer) mode**](docs/classic-mode.md): rebuild any version as a TER-style install to catch bugs that only surface outside Composer autoloading
+- [**Classic (non-Composer) mode**](docs/classic-mode.md): rebuild any supported TYPO3 12+ version as a TER-style install to catch bugs that only surface outside Composer autoloading
 - [**Fixture import**](docs/configuration.md#fixtures): XML exports, raw SQL, site configurations and shell scripts are imported automatically on every install
 - [**Demo content profiles**](docs/installation.md#--demoprofile): populate an instance with `typo3/cms-introduction` or `bk2k/bootstrap-package` instead of a blank page
 - [**Install hooks and `project.sh`**](docs/configuration.md): add composer packages, TYPO3 settings and custom install steps without touching add-on-managed files

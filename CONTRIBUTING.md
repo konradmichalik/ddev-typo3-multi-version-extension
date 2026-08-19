@@ -19,8 +19,8 @@ up on the next `ddev add-on get` / `ddev restart` without publishing anything.
 
 ## Tests
 
-Automated tests use [bats-core](https://bats-core.readthedocs.io/), run
-locally from the repository root:
+Automated tests use [bats-core](https://bats-core.readthedocs.io/) >= 1.8.0
+(required for `--filter-tags`), run locally from the repository root:
 
 ```shell
 bats ./tests/test.bats
@@ -31,7 +31,8 @@ bats ./tests/test.bats --filter-tags '!install'
 ```
 
 CI runs the same suite via `ddev/github-action-add-on-test` on every pull
-request, against both the stable and `HEAD` DDEV releases.
+request that touches something other than Markdown, against both the stable
+and `HEAD` DDEV releases - `tests.yml` skips doc-only changes.
 
 `tests/MANUAL_TESTING_CHECKLIST.md` tracks exploratory coverage against a real
 extension that the automated suite does not reach - update it alongside a
