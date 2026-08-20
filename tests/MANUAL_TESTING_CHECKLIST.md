@@ -78,7 +78,7 @@ Exploratory coverage against a real extension, complementing `test.bats`. Check 
 ## Intro page
 
 - [x] Git branch/commit shown when `.git-info` present — `typo3-dump-server`, 2026-08-18
-- [x] Intro page with no git info available (fresh, non-git project) — verified by code review only (write-git-info.sh's git-availability guard + index.php's empty-string check), not exercised live against a non-git scaffold — 2026-08-18
+- [ ] Intro page with no git info available (fresh, non-git project) now still shows the hostname (fix for issue #63 item 4 - the hostname was previously nested inside the git-branch/commit condition and got hidden along with it) - not yet exercised live
 - [x] DDEV command listing on the intro page reflects actual installed commands — `typo3-dump-server`, 2026-08-18
 
 ## Misc / lifecycle
