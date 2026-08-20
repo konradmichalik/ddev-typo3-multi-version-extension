@@ -238,6 +238,9 @@ function post_setup() {
       message yellow "Demo content requires Composer mode - skipping the '${DEMO_PROFILE}' profile."
     fi
     classic_post_setup
+    # classic_post_setup leaves the cwd at $BASE_PATH/public; cd back to
+    # $BASE_PATH first so a hook script sees the same cwd as in Composer mode.
+    cd "$BASE_PATH" || { message red "Failed to change to $BASE_PATH"; return 1; }
     run_hook "post-install"
     printf " └─ \033[33mTYPO3 %s (classic) setup completed!\033[0m Open: https://%s.%s.%s\n" \
            "$VERSION" "$VERSION" "$DDEV_SITENAME" "$DDEV_TLD"
