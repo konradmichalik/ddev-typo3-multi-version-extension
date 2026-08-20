@@ -343,13 +343,11 @@ function classic_post_setup() {
     # Classic mode does NOT auto-activate extensions found in typo3conf/ext
     # (unlike Composer mode since v11). Activation is PackageStates-based and
     # must be done explicitly. The core CLI ships hidden commands
-    # 'extension:activate' / 'extension:deactivate' for exactly this case
-    # (verified for v11/v12 — VERIFY they still exist in v13/v14; if not,
-    # fall back to writing the PackageStates entry programmatically).
+    # 'extension:activate' / 'extension:deactivate' for exactly this case.
     $TYPO3_BIN extension:activate "$EXTENSION_KEY"
     for dir in /var/www/html/Tests/Acceptance/Fixtures/packages/*/; do
         [ -d "$dir" ] || continue
-        $TYPO3_BIN extension:activate "$(basename "$dir")" || true
+        $TYPO3_BIN extension:activate "$(basename "$dir")"
     done
     # impexp is an optional system extension and needed for the XML fixture
     # import below — activate it only if XML fixtures exist.
