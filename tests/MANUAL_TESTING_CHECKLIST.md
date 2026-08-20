@@ -42,6 +42,7 @@ Exploratory coverage against a real extension, complementing `test.bats`. Check 
 - [x] `--demo=custom` profile (no package installed, relies on fixtures) — `typo3-dump-server`, 2026-08-18
 - [x] `--demo` on TYPO3 14 (introduction unavailable → automatic bootstrap fallback + message) — `typo3-dump-server`, 2026-08-18
 - [x] Unknown `--demo=<profile>` value is rejected with a clear error — `typo3-dump-server`, 2026-08-18
+- [ ] Empty `--demo=` value and an unrecognized flag (e.g. `--verbse`) are both rejected with an error instead of being silently dropped or mistaken for a version argument (issue #63 item 8) - not yet exercised live
 
 ## `project.sh` customizations
 
