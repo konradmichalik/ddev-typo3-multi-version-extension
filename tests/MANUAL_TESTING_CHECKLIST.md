@@ -72,6 +72,7 @@ Exploratory coverage against a real extension, complementing `test.bats`. Check 
 - [x] Primary and worktree checkout running simultaneously — `typo3-dump-server`, 2026-08-18
 - [x] Install a TYPO3 instance inside a worktree checkout — `typo3-dump-server`, 2026-08-18
 - [x] `worktree-remove` tears down containers/images/network — `typo3-dump-server`, 2026-08-18
+- [ ] `worktree-remove` refuses to run from the primary checkout instead of deleting its DDEV project (issue #63 item 7) - not yet exercised live
 - [x] `worktree-remove` actually removes its hostnames from `/etc/hosts` - confirmed absent after removal (previous attempts only hit a sudo/TTY limitation running non-interactively, not an add-on bug) — `typo3-dump-server`, 2026-08-18
 - [x] Three or more worktrees running in parallel (4 total incl. primary, unique hostnames, no collisions) — `typo3-dump-server`, 2026-08-18
 - [x] Started 3 new worktree projects while the primary kept running (the exact scenario the router 404 gotcha describes) — no 404 observed this run; timing-dependent, not force-reproduced — `typo3-dump-server`, 2026-08-18
