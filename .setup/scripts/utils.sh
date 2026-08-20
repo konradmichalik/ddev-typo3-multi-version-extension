@@ -234,7 +234,11 @@ function post_setup() {
   # explicit extension activation, docroot-relative config). The Composer path
   # below stays unchanged.
   if [ "${MODE:-composer}" = "classic" ]; then
+    if [ -n "$DEMO_PROFILE" ]; then
+      message yellow "Demo content requires Composer mode - skipping the '${DEMO_PROFILE}' profile."
+    fi
     classic_post_setup
+    run_hook "post-install"
     printf " └─ \033[33mTYPO3 %s (classic) setup completed!\033[0m Open: https://%s.%s.%s\n" \
            "$VERSION" "$VERSION" "$DDEV_SITENAME" "$DDEV_TLD"
     return

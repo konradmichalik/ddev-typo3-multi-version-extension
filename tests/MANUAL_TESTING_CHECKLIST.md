@@ -31,6 +31,7 @@ Exploratory coverage against a real extension, complementing `test.bats`. Check 
 - [x] `--classic` rejected for `all` and for TYPO3 11 (documented guards) — `typo3-dump-server`, 2026-08-18
 - [x] Switching a version slot from classic back to composer mode (`ddev install <v>` without the flag) — `typo3-dump-server`, 2026-08-18
 - [x] `project.sh`'s `TYPO3_SETTINGS` applied in classic mode - implemented (was a real gap) and verified: `$DDEV_SITENAME` expansion and quoted-string values both resolve correctly — `typo3-dump-server`, 2026-08-18
+- [ ] `--classic --demo` warns that demo content requires Composer mode, skips the demo install, and still runs the `post-install` hook (issue #63 item 1) - not yet exercised live
 
 ## Demo content (`--demo`)
 
