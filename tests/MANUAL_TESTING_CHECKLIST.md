@@ -68,6 +68,7 @@ Exploratory coverage against a real extension, complementing `test.bats`. Check 
 ## Git worktree support
 
 - [x] `worktree-init` regenerates hostnames without colliding with the primary checkout — `typo3-dump-server`, 2026-08-18
+- [ ] `worktree-init` fails explicitly (instead of guessing `12 13 14`) when `TYPO3_VERSIONS` can't be read from `docker-compose.typo3-setup.yaml` (issue #63 item 6) - not yet exercised live
 - [x] Primary and worktree checkout running simultaneously — `typo3-dump-server`, 2026-08-18
 - [x] Install a TYPO3 instance inside a worktree checkout — `typo3-dump-server`, 2026-08-18
 - [x] `worktree-remove` tears down containers/images/network — `typo3-dump-server`, 2026-08-18
