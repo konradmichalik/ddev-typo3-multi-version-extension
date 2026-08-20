@@ -88,4 +88,5 @@ Exploratory coverage against a real extension, complementing `test.bats`. Check 
 
 - [ ] `ddev add-on remove` now removes only add-on-managed subpaths under `.ddev/.setup/` and leaves a project's own `.ddev/.setup/project.sh` in place (fix for issue #63 item 5, previously `rm -rf`'d the whole directory) - not yet exercised live
 - [x] `TYPO3_CONTEXT` override via a project-owned `zz`-sorted compose file — `typo3-dump-server`, 2026-08-18
+- [ ] `.ddev/.setup/templates/` post-start copy handles a subdirectory (`cp -r`) instead of failing `ddev restart` (issue #63 item 13) - not yet exercised live
 - [x] `composer.json` normalization / CGL still passes after add-on-driven edits to a project's own files — N/A by design: verified via code review that no install.yaml action ever writes outside `.ddev/` (the `find ${DDEV_APPROOT}/.ddev` substitutions are scoped there; composer.json is only *read* for its `name`). The one real edit to `typo3-dump-server`'s own composer.json today (vendor-bundler dev-dependency, PR #64) was a deliberate manual step, not an automatic add-on action, and passed the project's own `cgl` CI job — 2026-08-18

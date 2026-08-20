@@ -100,7 +100,7 @@ post_install_actions:
       - 14.${DDEV_PROJECT}
     hooks:
        post-start:
-        - exec: mkdir -p /var/www/html/.Build/ && cp /var/www/html/.ddev/.setup/templates/* /var/www/html/.Build/ && bash /var/www/html/.ddev/.setup/scripts/write-git-info.sh
+        - exec: mkdir -p /var/www/html/.Build/ && cp -r /var/www/html/.ddev/.setup/templates/. /var/www/html/.Build/ && bash /var/www/html/.ddev/.setup/scripts/write-git-info.sh
     EOF
 
   - |
