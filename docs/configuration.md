@@ -100,24 +100,32 @@ imported automatically:
 | Site config | `Tests/Acceptance/Fixtures/sites/<site-name>/` | Site configuration directories copied to `config/sites/`. In `config.yaml`, `__VERSION__` is replaced with the TYPO3 version and `__SITENAME__` with the project's `DDEV_SITENAME`. Use a relative `base: /` - an absolute hostname in `base` breaks as soon as the project's hostname changes (e.g. in a `git worktree` checkout). The older `VERSION_PLACEHOLDER` placeholder still works but is deprecated in favor of `__VERSION__`. |
 | Shell scripts | `Tests/Acceptance/Fixtures/*.sh` | Executed during setup (failures are logged but don't abort the installation) |
 
-## Application context
+## Overriding add-on-managed environment variables
 
-Every installed instance runs with `TYPO3_CONTEXT=Development`, set via
-`docker-compose.typo3-setup.yaml`. `ddev config --web-environment-add=TYPO3_CONTEXT=Production`
-does **not** override it - add-on-provided compose files are merged after
-DDEV's own config-derived one, so the add-on's value always wins. To override
-it, add your own compose file that sorts after `docker-compose.typo3-setup.yaml`
-(survives `ddev add-on get` updates, since it isn't a file the add-on manages):
+Every variable in `docker-compose.typo3-setup.yaml` (`TYPO3_CONTEXT`,
+`TYPO3_VERSIONS`, `TYPO3_SERVER_TYPE`, ...) is set in a file the add-on
+regenerates on every `ddev add-on get` update, so editing it there directly
+only survives until the next update. `ddev config --web-environment-add=...`
+doesn't help either - add-on-provided compose files are merged after DDEV's
+own config-derived one, so the add-on's value always wins.
+
+Copy [`.ddev/.setup/docker-compose.project.yaml.example`](../.setup/docker-compose.project.yaml.example)
+to `.ddev/docker-compose.project.yaml` instead - it isn't managed by the
+add-on, so it survives updates. DDEV merges every `docker-compose.*.yaml`
+file under `.ddev/` in filename order, and Compose merges the `environment`
+list by variable name, so an entry here overrides the add-on's value for an
+existing variable and adds any new one:
 
 ```yaml
-# .ddev/docker-compose.zz-context-override.yaml
+# .ddev/docker-compose.project.yaml
 services:
   web:
     environment:
       - TYPO3_CONTEXT=Production
+      - TYPO3_VERSIONS=13 14
 ```
 
-Then run `ddev restart` to apply it.
+Run `ddev restart` after changing it.
 
 ## Avoiding CS-fixer churn on `.ddev/`
 
