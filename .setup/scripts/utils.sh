@@ -505,6 +505,10 @@ function setup_environment() {
 # core's own setup command, which requires one of apache/iis/other and
 # throws a TypeError if none is given non-interactively.
 function compute_typo3_server_type() {
+    if [ -n "${TYPO3_SERVER_TYPE:-}" ]; then
+        export TYPO3_SERVER_TYPE
+        return 0
+    fi
     if [ "$DDEV_WEBSERVER_TYPE" == "apache-fpm" ]; then
         export TYPO3_SERVER_TYPE="apache"
     else
