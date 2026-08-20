@@ -20,15 +20,15 @@ or adjust the `ddev install` command - within e.g. the
 TYPO3 11 is still fully supported by the install scripts but is not part of
 that default set.
 
-`docker-compose.typo3-setup.yaml` carries a `#ddev-generated` marker and is
-fully rewritten from the add-on's template on every `ddev add-on get` update -
-editing `TYPO3_VERSIONS` there directly is only safe until the next update. To
-permanently scope the installed versions down (or add `11` back), use
-[`docker-compose.project.yaml`](#overriding-add-on-managed-environment-variables)
+`.ddev/docker-compose.typo3-setup.yaml` carries a `#ddev-generated` marker and
+is fully rewritten from the add-on's template on every `ddev add-on get`
+update - editing `TYPO3_VERSIONS` there directly is only safe until the next
+update. To permanently scope the installed versions down (or add `11` back),
+use [`docker-compose.zz-project.yaml`](#overriding-add-on-managed-environment-variables)
 instead:
 
 ```yaml
-# .ddev/docker-compose.project.yaml
+# .ddev/docker-compose.zz-project.yaml
 services:
   web:
     environment:
@@ -113,22 +113,25 @@ imported automatically:
 
 ## Overriding add-on-managed environment variables
 
-Every variable in `docker-compose.typo3-setup.yaml` (`TYPO3_CONTEXT`,
+Every variable in `.ddev/docker-compose.typo3-setup.yaml` (`TYPO3_CONTEXT`,
 `TYPO3_VERSIONS`, `TYPO3_SERVER_TYPE`, ...) is set in a file the add-on
 regenerates on every `ddev add-on get` update, so editing it there directly
 only survives until the next update. `ddev config --web-environment-add=...`
 doesn't help either - add-on-provided compose files are merged after DDEV's
 own config-derived one, so the add-on's value always wins.
 
-Copy [`.ddev/.setup/docker-compose.project.yaml.example`](../.setup/docker-compose.project.yaml.example)
-to `.ddev/docker-compose.project.yaml` instead - it isn't managed by the
+Copy [`.ddev/.setup/docker-compose.zz-project.yaml.example`](../.setup/docker-compose.zz-project.yaml.example)
+to `.ddev/docker-compose.zz-project.yaml` instead - it isn't managed by the
 add-on, so it survives updates. DDEV merges every `docker-compose.*.yaml`
 file under `.ddev/` in filename order, and Compose merges the `environment`
 list by variable name, so an entry here overrides the add-on's value for an
-existing variable and adds any new one:
+existing variable and adds any new one. The `zz` prefix keeps this file
+sorting after `docker-compose.typo3-setup.yaml` - a file that sorts before it
+(e.g. `docker-compose.project.yaml`) would lose every conflicting key to the
+add-on's own value instead of overriding it:
 
 ```yaml
-# .ddev/docker-compose.project.yaml
+# .ddev/docker-compose.zz-project.yaml
 services:
   web:
     environment:

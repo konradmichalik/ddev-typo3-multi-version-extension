@@ -18,7 +18,7 @@ on every version at once, without reinstalling anything.
 - [**Classic (non-Composer) mode**](docs/classic-mode.md): rebuild any version as a TER-style install to catch bugs that only surface outside Composer autoloading
 - [**Fixture import**](docs/configuration.md#fixtures): XML exports, raw SQL, site configurations and shell scripts are imported automatically on every install
 - [**Demo content profiles**](docs/installation.md#--demoprofile): populate an instance with `typo3/cms-introduction` or `bk2k/bootstrap-package` instead of a blank page
-- [**Install hooks, `project.sh` and `docker-compose.project.yaml`**](docs/configuration.md): add composer packages, TYPO3 settings, custom install steps and env var overrides without touching add-on-managed files
+- [**Install hooks, `project.sh` and `docker-compose.zz-project.yaml`**](docs/configuration.md): add composer packages, TYPO3 settings, custom install steps and env var overrides without touching add-on-managed files
 - [**Git worktree support**](docs/git-worktrees.md): run several checkouts of the same repository side by side without hostname collisions
 
 ## 🔥 Installation
