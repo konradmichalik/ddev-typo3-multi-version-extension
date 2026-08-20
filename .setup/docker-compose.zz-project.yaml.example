@@ -1,0 +1,21 @@
+# .ddev/docker-compose.zz-project.yaml — repo-owned overrides for
+# docker-compose.typo3-setup.yaml.
+#
+# Copy this file to .ddev/docker-compose.zz-project.yaml and adjust it. Unlike
+# docker-compose.typo3-setup.yaml, it isn't managed by the add-on, so it
+# survives `ddev add-on get` upgrades. DDEV merges every docker-compose.*.yaml
+# file under .ddev/ in filename order, and Compose merges the "environment"
+# list by variable name - the "zz" prefix keeps this file sorting after
+# docker-compose.typo3-setup.yaml, so its values win for any variable both
+# files set.
+#
+# Run `ddev restart` after changing it.
+services:
+    web:
+        environment:
+            # Permanently scope down the installed TYPO3 versions, surviving
+            # every future `ddev add-on get` update.
+            - TYPO3_VERSIONS=13 14
+
+            # Add your own variables, e.g. for a project-specific extension.
+            - MY_EXTENSION_SETTING=value

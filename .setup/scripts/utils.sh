@@ -234,7 +234,14 @@ function post_setup() {
   # explicit extension activation, docroot-relative config). The Composer path
   # below stays unchanged.
   if [ "${MODE:-composer}" = "classic" ]; then
+    if [ -n "$DEMO_PROFILE" ]; then
+      message yellow "Demo content requires Composer mode - skipping the '${DEMO_PROFILE}' profile."
+    fi
     classic_post_setup
+    # classic_post_setup leaves the cwd at $BASE_PATH/public; cd back to
+    # $BASE_PATH first so a hook script sees the same cwd as in Composer mode.
+    cd "$BASE_PATH" || { message red "Failed to change to $BASE_PATH"; return 1; }
+    run_hook "post-install"
     printf " └─ \033[33mTYPO3 %s (classic) setup completed!\033[0m Open: https://%s.%s.%s\n" \
            "$VERSION" "$VERSION" "$DDEV_SITENAME" "$DDEV_TLD"
     return
@@ -339,13 +346,11 @@ function classic_post_setup() {
     # Classic mode does NOT auto-activate extensions found in typo3conf/ext
     # (unlike Composer mode since v11). Activation is PackageStates-based and
     # must be done explicitly. The core CLI ships hidden commands
-    # 'extension:activate' / 'extension:deactivate' for exactly this case
-    # (verified for v11/v12 — VERIFY they still exist in v13/v14; if not,
-    # fall back to writing the PackageStates entry programmatically).
+    # 'extension:activate' / 'extension:deactivate' for exactly this case.
     $TYPO3_BIN extension:activate "$EXTENSION_KEY"
     for dir in /var/www/html/Tests/Acceptance/Fixtures/packages/*/; do
         [ -d "$dir" ] || continue
-        $TYPO3_BIN extension:activate "$(basename "$dir")" || true
+        $TYPO3_BIN extension:activate "$(basename "$dir")"
     done
     # impexp is an optional system extension and needed for the XML fixture
     # import below — activate it only if XML fixtures exist.
@@ -503,6 +508,10 @@ function setup_environment() {
 # core's own setup command, which requires one of apache/iis/other and
 # throws a TypeError if none is given non-interactively.
 function compute_typo3_server_type() {
+    if [ -n "${TYPO3_SERVER_TYPE:-}" ]; then
+        export TYPO3_SERVER_TYPE
+        return 0
+    fi
     if [ "$DDEV_WEBSERVER_TYPE" == "apache-fpm" ]; then
         export TYPO3_SERVER_TYPE="apache"
     else

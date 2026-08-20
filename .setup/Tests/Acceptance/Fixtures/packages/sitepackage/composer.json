@@ -1,6 +1,6 @@
 {
   "name": "test/sitepackage",
-  "description": "typo3-natural-language-query testing",
+  "description": "Demo sitepackage for testing purposes",
   "license": "GPL-2.0-or-later",
   "type": "typo3-cms-extension",
   "authors": [

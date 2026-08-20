@@ -12,6 +12,13 @@ if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     exit 1
 fi
 
+git_dir="$(cd "$(git rev-parse --git-dir)" && pwd -P)"
+common_dir="$(cd "$(git rev-parse --git-common-dir)" && pwd -P)"
+if [ "$git_dir" = "$common_dir" ]; then
+    echo "Run this command from a linked git worktree, not the primary checkout."
+    exit 1
+fi
+
 worktree_path="$(pwd)"
 branch="$(git rev-parse --abbrev-ref HEAD)"
 

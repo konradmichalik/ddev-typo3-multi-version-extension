@@ -18,7 +18,17 @@ for arg in "$@"; do
         -v|--verbose) export VERBOSE=1 ;;
         --classic)    export MODE=classic ;;
         --demo) DEMO_PROFILE="introduction" ;;
-        --demo=*) DEMO_PROFILE="${arg#--demo=}" ;;
+        --demo=*)
+            DEMO_PROFILE="${arg#--demo=}"
+            if [ -z "$DEMO_PROFILE" ]; then
+                echo "Empty demo profile. Use --demo or --demo=<profile>."
+                exit 1
+            fi
+            ;;
+        -*)
+            echo "Unknown option '$arg'."
+            exit 1
+            ;;
         *) [ -z "$TYPO3" ] && TYPO3="$arg" ;;
     esac
 done

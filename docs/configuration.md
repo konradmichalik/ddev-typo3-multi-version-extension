@@ -18,15 +18,26 @@ or adjust the `ddev install` command - within e.g. the
 
 `TYPO3 12`, `13` and `14` are installed by `ddev install all` by default.
 TYPO3 11 is still fully supported by the install scripts but is not part of
-that default set. Edit the `TYPO3_VERSIONS` variable in
-[`.ddev/docker-compose.typo3-setup.yaml`](../docker-compose.typo3-setup.yaml)
-to drop versions you don't need, or add `11` back:
+that default set.
+
+`.ddev/docker-compose.typo3-setup.yaml` carries a `#ddev-generated` marker and
+is fully rewritten from the add-on's template on every `ddev add-on get`
+update - editing `TYPO3_VERSIONS` there directly is only safe until the next
+update. To permanently scope the installed versions down (or add `11` back),
+use [`docker-compose.zz-project.yaml`](#overriding-add-on-managed-environment-variables)
+instead:
 
 ```yaml
-- TYPO3_VERSIONS=11 12 13 14
+# .ddev/docker-compose.zz-project.yaml
+services:
+  web:
+    environment:
+      - TYPO3_VERSIONS=13 14
 ```
 
-Run `ddev restart` after changing it.
+Run `ddev restart` after changing it. The additional hostname for each
+version (used by `ddev install`/`ddev launch`) is regenerated from this same
+value on the next `ddev add-on get`.
 
 ## `SYMLINK_EXCLUSIONS`
 
@@ -100,24 +111,35 @@ imported automatically:
 | Site config | `Tests/Acceptance/Fixtures/sites/<site-name>/` | Site configuration directories copied to `config/sites/`. In `config.yaml`, `__VERSION__` is replaced with the TYPO3 version and `__SITENAME__` with the project's `DDEV_SITENAME`. Use a relative `base: /` - an absolute hostname in `base` breaks as soon as the project's hostname changes (e.g. in a `git worktree` checkout). The older `VERSION_PLACEHOLDER` placeholder still works but is deprecated in favor of `__VERSION__`. |
 | Shell scripts | `Tests/Acceptance/Fixtures/*.sh` | Executed during setup (failures are logged but don't abort the installation) |
 
-## Application context
+## Overriding add-on-managed environment variables
 
-Every installed instance runs with `TYPO3_CONTEXT=Development`, set via
-`docker-compose.typo3-setup.yaml`. `ddev config --web-environment-add=TYPO3_CONTEXT=Production`
-does **not** override it - add-on-provided compose files are merged after
-DDEV's own config-derived one, so the add-on's value always wins. To override
-it, add your own compose file that sorts after `docker-compose.typo3-setup.yaml`
-(survives `ddev add-on get` updates, since it isn't a file the add-on manages):
+Every variable in `.ddev/docker-compose.typo3-setup.yaml` (`TYPO3_CONTEXT`,
+`TYPO3_VERSIONS`, `TYPO3_SERVER_TYPE`, ...) is set in a file the add-on
+regenerates on every `ddev add-on get` update, so editing it there directly
+only survives until the next update. `ddev config --web-environment-add=...`
+doesn't help either - add-on-provided compose files are merged after DDEV's
+own config-derived one, so the add-on's value always wins.
+
+Copy [`.ddev/.setup/docker-compose.zz-project.yaml.example`](../.setup/docker-compose.zz-project.yaml.example)
+to `.ddev/docker-compose.zz-project.yaml` instead - it isn't managed by the
+add-on, so it survives updates. DDEV merges every `docker-compose.*.yaml`
+file under `.ddev/` in filename order, and Compose merges the `environment`
+list by variable name, so an entry here overrides the add-on's value for an
+existing variable and adds any new one. The `zz` prefix keeps this file
+sorting after `docker-compose.typo3-setup.yaml` - a file that sorts before it
+(e.g. `docker-compose.project.yaml`) would lose every conflicting key to the
+add-on's own value instead of overriding it:
 
 ```yaml
-# .ddev/docker-compose.zz-context-override.yaml
+# .ddev/docker-compose.zz-project.yaml
 services:
   web:
     environment:
       - TYPO3_CONTEXT=Production
+      - TYPO3_VERSIONS=13 14
 ```
 
-Then run `ddev restart` to apply it.
+Run `ddev restart` after changing it.
 
 ## Avoiding CS-fixer churn on `.ddev/`
 

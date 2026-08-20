@@ -29,6 +29,7 @@ project_files:
   - .setup/scripts/utils.sh
   - .setup/scripts/write-git-info.sh
   - .setup/project.sh.example
+  - .setup/docker-compose.zz-project.yaml.example
   - .setup/templates/index.php
   - .setup/Tests/Acceptance/Fixtures/
   - apache/10.conf
@@ -89,19 +90,34 @@ post_install_actions:
     echo " - .ddev/docker-compose.typo3-setup.yaml"
   - |
     #ddev-description:Create a config.typo3-setup.yaml
+    # additional_hostnames must match the TYPO3_VERSIONS this project actually
+    # installs. A project-owned docker-compose.zz-project.yaml (see
+    # docs/configuration.md) survives updates and can override TYPO3_VERSIONS,
+    # so it takes precedence over the add-on-managed docker-compose.typo3-setup.yaml;
+    # fall back to that file's own default when neither has a match.
+    # Mirrors the same lookup in commands/host/worktree-init - keep both in sync.
+    typo3_versions=""
+    override_compose="${DDEV_APPROOT}/.ddev/docker-compose.zz-project.yaml"
+    if [ -f "$override_compose" ]; then
+      typo3_versions=$(grep -oE 'TYPO3_VERSIONS=[0-9 ]+' "$override_compose" | head -1 | cut -d= -f2)
+    fi
+    if [ -z "$typo3_versions" ]; then
+      typo3_versions=$(grep -oE 'TYPO3_VERSIONS=[0-9 ]+' "${DDEV_APPROOT}/.ddev/docker-compose.typo3-setup.yaml" | head -1 | cut -d= -f2)
+    fi
+    [ -z "$typo3_versions" ] && typo3_versions="12 13 14"
+
+    {
+      echo "type: php"
+      echo "docroot: .Build"
+      echo "additional_hostnames:"
+      for version in $typo3_versions; do
+        echo "  - ${version}.${DDEV_PROJECT}"
+      done
+      echo "hooks:"
+      echo "   post-start:"
+      echo "    - exec: mkdir -p /var/www/html/.Build/ && cp -r /var/www/html/.ddev/.setup/templates/. /var/www/html/.Build/ && bash /var/www/html/.ddev/.setup/scripts/write-git-info.sh"
+    } >${DDEV_APPROOT}/.ddev/config.typo3-setup.yaml
     echo "Created .ddev/config.typo3-setup.yaml"
-    cat <<EOF >${DDEV_APPROOT}/.ddev/config.typo3-setup.yaml
-    type: php
-    docroot: .Build
-    additional_hostnames:
-      - 11.${DDEV_PROJECT}
-      - 12.${DDEV_PROJECT}
-      - 13.${DDEV_PROJECT}
-      - 14.${DDEV_PROJECT}
-    hooks:
-       post-start:
-        - exec: mkdir -p /var/www/html/.Build/ && cp /var/www/html/.ddev/.setup/templates/* /var/www/html/.Build/ && bash /var/www/html/.ddev/.setup/scripts/write-git-info.sh
-    EOF
 
   - |
     #ddev-description:Create Tests folder
@@ -144,4 +160,8 @@ post_install_actions:
 removal_actions:
   - rm -f ${DDEV_APPROOT}/.ddev/config.typo3-setup.yaml
   - rm -f "${DDEV_APPROOT}/.ddev/config.zz-worktree.local.yaml"
-  - rm -rf ${DDEV_APPROOT}/.ddev/.setup/
+  - rm -rf "${DDEV_APPROOT}/.ddev/.setup/scripts"
+  - rm -rf "${DDEV_APPROOT}/.ddev/.setup/templates"
+  - rm -rf "${DDEV_APPROOT}/.ddev/.setup/Tests"
+  - rm -f "${DDEV_APPROOT}/.ddev/.setup/project.sh.example"
+  - rm -f "${DDEV_APPROOT}/.ddev/.setup/docker-compose.zz-project.yaml.example"
