@@ -18,15 +18,26 @@ or adjust the `ddev install` command - within e.g. the
 
 `TYPO3 12`, `13` and `14` are installed by `ddev install all` by default.
 TYPO3 11 is still fully supported by the install scripts but is not part of
-that default set. Edit the `TYPO3_VERSIONS` variable in
-[`.ddev/docker-compose.typo3-setup.yaml`](../docker-compose.typo3-setup.yaml)
-to drop versions you don't need, or add `11` back:
+that default set.
+
+`docker-compose.typo3-setup.yaml` carries a `#ddev-generated` marker and is
+fully rewritten from the add-on's template on every `ddev add-on get` update -
+editing `TYPO3_VERSIONS` there directly is only safe until the next update. To
+permanently scope the installed versions down (or add `11` back), use
+[`docker-compose.project.yaml`](#overriding-add-on-managed-environment-variables)
+instead:
 
 ```yaml
-- TYPO3_VERSIONS=11 12 13 14
+# .ddev/docker-compose.project.yaml
+services:
+  web:
+    environment:
+      - TYPO3_VERSIONS=13 14
 ```
 
-Run `ddev restart` after changing it.
+Run `ddev restart` after changing it. The additional hostname for each
+version (used by `ddev install`/`ddev launch`) is regenerated from this same
+value on the next `ddev add-on get`.
 
 ## `SYMLINK_EXCLUSIONS`
 
