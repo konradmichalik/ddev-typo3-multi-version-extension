@@ -13,7 +13,18 @@ if [ ! -f "$COMPOSE_FILE" ]; then
     exit 1
 fi
 
-typo3_versions=$(grep -oE 'TYPO3_VERSIONS=[0-9 ]+' "$COMPOSE_FILE" | head -1 | cut -d= -f2)
+# A project-owned docker-compose.project.yaml (see docs/configuration.md)
+# survives ddev add-on get updates and can override TYPO3_VERSIONS, so it
+# takes precedence over the add-on-managed docker-compose.typo3-setup.yaml -
+# mirrors the same lookup in install.yaml's config.typo3-setup.yaml step.
+OVERRIDE_COMPOSE_FILE=".ddev/docker-compose.project.yaml"
+typo3_versions=""
+if [ -f "$OVERRIDE_COMPOSE_FILE" ]; then
+    typo3_versions=$(grep -oE 'TYPO3_VERSIONS=[0-9 ]+' "$OVERRIDE_COMPOSE_FILE" | head -1 | cut -d= -f2)
+fi
+if [ -z "$typo3_versions" ]; then
+    typo3_versions=$(grep -oE 'TYPO3_VERSIONS=[0-9 ]+' "$COMPOSE_FILE" | head -1 | cut -d= -f2)
+fi
 if [ -z "$typo3_versions" ]; then
     echo "Could not read TYPO3_VERSIONS from $COMPOSE_FILE - refusing to guess. Check the file for a valid 'TYPO3_VERSIONS=<versions>' entry."
     exit 1

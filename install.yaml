@@ -95,6 +95,7 @@ post_install_actions:
     # docs/configuration.md) survives updates and can override TYPO3_VERSIONS,
     # so it takes precedence over the add-on-managed docker-compose.typo3-setup.yaml;
     # fall back to that file's own default when neither has a match.
+    # Mirrors the same lookup in commands/host/worktree-init - keep both in sync.
     typo3_versions=""
     override_compose="${DDEV_APPROOT}/.ddev/docker-compose.project.yaml"
     if [ -f "$override_compose" ]; then
