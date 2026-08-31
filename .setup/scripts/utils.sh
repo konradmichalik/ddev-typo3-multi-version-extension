@@ -462,7 +462,7 @@ function intro_typo3() {
 function install_start() {
     run_hook "pre-install"
 
-    rm -rf /var/www/html/.Build/$VERSION/*
+    rm -rf "/var/www/html/.Build/${VERSION:?}"/*
     _progress " ├─ Setup environment"
       setup_environment
     _done
@@ -480,7 +480,7 @@ function install_start() {
 # creates necessary directories, sets permissions, and exports environment variables.
 # Additionally, it drops the existing database for the TYPO3 version.
 function setup_environment() {
-    rm -rf "$BASE_PATH"
+    rm -rf "${BASE_PATH:?}"
     mkdir -p "$BASE_PATH/packages/$EXTENSION_KEY"
     chmod 775 -R $BASE_PATH
     # Mode marker read by the exec wrappers (ddev <v> …) to pick the right
@@ -565,7 +565,7 @@ function create_symlinks_additional_extensions() {
 # wires up the classic docroot symlinks. There is deliberately no Composer
 # step here — see classic_create_symlinks for why.
 function classic_install_start() {
-    rm -rf "$BASE_PATH"
+    rm -rf "${BASE_PATH:?}"
     _progress " ├─ Setup environment"
       classic_setup_environment
     _done
