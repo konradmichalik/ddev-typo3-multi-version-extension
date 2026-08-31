@@ -193,6 +193,40 @@ function check_typo3_version() {
     return 0
 }
 
+# Reads the exact installed TYPO3 core version for a version slot - the
+# configured major version alone (e.g. "13") doesn't say which patch release
+# actually ended up installed, since the Composer constraint always resolves
+# to the newest one available at install time.
+#
+# Composer mode reads it straight out of composer.lock (the resolved
+# typo3/cms-core version). Classic mode has no composer.lock, so it reads the
+# VERSION class constant out of the downloaded core source instead.
+#
+# Arguments:
+#   $1 - Base path of the version slot (e.g. /var/www/html/.Build/13)
+#   $2 - Install mode ("composer" or "classic")
+#   $3 - TYPO3 major version (used to locate typo3_src-<v> in classic mode)
+#
+# Prints the version (e.g. "13.4.34"), or "unknown" if it can't be determined.
+function get_typo3_installed_version() {
+    local base_path="$1" mode="$2" version="$3" v=""
+
+    if [ "$mode" = "classic" ]; then
+        local version_file="$base_path/typo3_src-$version/typo3/sysext/core/Classes/Information/Typo3Version.php"
+        if [ -f "$version_file" ]; then
+            v=$(grep -oE "VERSION = '[^']+'" "$version_file" | head -1 | cut -d "'" -f2)
+        fi
+    else
+        local lock_file="$base_path/composer.lock"
+        if [ -f "$lock_file" ]; then
+            v=$(grep -A2 '"name": *"typo3/cms-core"' "$lock_file" | grep '"version"' | head -1 | sed -E 's/.*"version": *"([^"]+)".*/\1/')
+            v="${v#v}" # composer.lock stores it as e.g. "v13.4.34" (git-tag style)
+        fi
+    fi
+
+    echo "${v:-unknown}"
+}
+
 # Function to perform pre-setup tasks for TYPO3 installation.
 # It exports the provided TYPO3 version to the VERSION environment variable,
 # displays an introductory message for the TYPO3 version, and starts the installation process.

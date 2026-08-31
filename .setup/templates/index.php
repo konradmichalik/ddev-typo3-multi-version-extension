@@ -29,6 +29,35 @@ if (file_exists($composerJsonPath)) {
 } else {
     $description = 'composer.json file not found. =(';
 }
+
+// Reads the exact installed TYPO3 core version for a version slot - the
+// configured major version alone doesn't say which patch release actually
+// ended up installed, since the Composer constraint always resolves to the
+// newest one available at install time. Composer mode reads it out of
+// composer.lock, classic mode (no composer.lock) out of the VERSION class
+// constant in the downloaded core source.
+function getInstalledTypo3Version(string $directoryPath, string $mode, string $version): string
+{
+    if ($mode === 'classic') {
+        $versionFile = $directoryPath . '/typo3_src-' . $version . '/typo3/sysext/core/Classes/Information/Typo3Version.php';
+        if (is_file($versionFile) && preg_match("/VERSION = '([^']+)'/", file_get_contents($versionFile), $matches)) {
+            return $matches[1];
+        }
+        return 'unknown';
+    }
+
+    $lockFile = $directoryPath . '/composer.lock';
+    if (is_file($lockFile)) {
+        $lock = json_decode(file_get_contents($lockFile), true) ?: [];
+        foreach ($lock['packages'] ?? [] as $package) {
+            if (($package['name'] ?? '') === 'typo3/cms-core') {
+                return ltrim($package['version'] ?? 'unknown', 'v');
+            }
+        }
+    }
+
+    return 'unknown';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -69,7 +98,8 @@ if (file_exists($composerJsonPath)) {
             // version slot was built in composer (default) or classic mode.
             $modeFile = $directoryPath . '/.install-mode';
             $mode = is_file($modeFile) ? trim(file_get_contents($modeFile)) : 'composer';
-            echo "<article class='flex'><kbd>{$version}</kbd><div><small>{$mode}</small></div><div><strong>Frontend</strong><br/><strong>Backend</strong></div><div><a target='_blank' href='https://{$version}.{$siteHostname}'>https://{$version}.{$siteHostname}</a><br/><a target='_blank' href='https://{$version}.{$siteHostname}/typo3/?u={$typo3AdminUser}&p={$typo3AdminPassword}'>https://{$version}.{$siteHostname}/typo3</a></div></article>";
+            $installedVersion = getInstalledTypo3Version($directoryPath, $mode, $version);
+            echo "<article class='flex'><kbd>{$version}</kbd><div><small>{$mode} &middot; {$installedVersion}</small></div><div><strong>Frontend</strong><br/><strong>Backend</strong></div><div><a target='_blank' href='https://{$version}.{$siteHostname}'>https://{$version}.{$siteHostname}</a><br/><a target='_blank' href='https://{$version}.{$siteHostname}/typo3/?u={$typo3AdminUser}&p={$typo3AdminPassword}'>https://{$version}.{$siteHostname}/typo3</a></div></article>";
         } else {
             echo "<article>Version {$version} is not installed. Run <code>ddev install {$version}</code> to install.</article>";
         }
