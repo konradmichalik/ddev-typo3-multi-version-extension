@@ -44,6 +44,7 @@ for version in "${versions[@]}"; do
     fi
 
     cd "$exec_dir"
-    message magenta "[TYPO3 v${version} (${mode})] ${tempCommand}"
+    installed_version=$(get_typo3_installed_version "$TYPO3_PATH" "$mode" "$version")
+    message magenta "[TYPO3 v${version} (${mode}) - ${installed_version}] ${tempCommand}"
     $tempCommand
 done

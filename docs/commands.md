@@ -19,6 +19,12 @@ version but no path, opens that instance's homepage. `<path>` is appended to
 the instance URL, so `ddev launch 13 /typo3` opens the TYPO3 13 backend
 directly.
 
+The intro page lists each installed instance's exact core version (e.g.
+`13.4.34`), read from `composer.lock` or, in classic mode, from the
+downloaded core source - not just the configured major (`13`), since the
+Composer constraint always resolves to the newest patch release available at
+install time. `ddev all` prints the same detail in its per-instance header.
+
 ## `ddev <version> <command>`
 
 Runs `<command>` inside one instance's directory. `typo3 …` is rewritten to
