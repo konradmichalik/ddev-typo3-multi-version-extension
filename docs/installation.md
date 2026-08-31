@@ -72,3 +72,14 @@ and is rejected for version `11` (`Classic mode requires TYPO3 v12 or higher.`).
 
 To switch a slot back to a Composer instance, re-run the install without the
 flag: `ddev install 13`.
+
+## Security note: Composer advisory blocking is disabled
+
+Every Composer install/require for a version slot runs with
+`audit.block-insecure` set to `false`. Composer normally refuses to install
+any package version flagged by a known security advisory - since instances
+intentionally cover TYPO3 majors past their security-support window (to see
+what changed across versions), that block would otherwise trigger on
+essentially any install. This is about the disposable dev instance, not the
+extension being tested: it never affects `composer audit` or advisory
+handling in your own project outside `.Build/`.
