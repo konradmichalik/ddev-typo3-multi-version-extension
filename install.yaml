@@ -9,6 +9,24 @@ pre_install_actions:
     fi
 
   - |
+    #ddev-description:Check for a valid composer.json
+    # Fails here, before any files are copied, instead of silently skipping
+    # the package-name substitution below and surfacing a confusing error
+    # much later inside `composer req` on the first `ddev install`.
+    if [ ! -f "${DDEV_APPROOT}/composer.json" ]; then
+      echo "No composer.json found in the project root. This add-on requires a TYPO3 extension with a valid composer.json - see the README prerequisites.";
+      exit 1;
+    fi
+    if ! command -v jq >/dev/null 2>&1; then
+      echo "jq is required to read composer.json but was not found. Install jq and try again.";
+      exit 1;
+    fi
+    if [ -z "$(jq -r '.name // empty' "${DDEV_APPROOT}/composer.json")" ]; then
+      echo "composer.json has no \"name\" field. Set one (e.g. \"vendor/my-extension\") and try again.";
+      exit 1;
+    fi
+
+  - |
     #ddev-description:Remove a pre-rename docker-compose.web.yaml
     old_compose="${DDEV_APPROOT}/.ddev/docker-compose.web.yaml"
     # Early add-on versions generated this file under the generic
@@ -55,17 +73,15 @@ ddev_version_constraint: '>= v1.24.10'
 post_install_actions:
   - |
     #ddev-description:Replace package name
+    # composer.json, jq and a non-empty .name are already guaranteed by the
+    # "Check for a valid composer.json" pre-install action.
     export LC_ALL=C LANG=C
-    if [ -f ${DDEV_APPROOT}/composer.json ]; then
-      composer_name=$(jq -r '.name' ${DDEV_APPROOT}/composer.json)
-      if [ ! -z "$composer_name" ]; then
+    composer_name=$(jq -r '.name' ${DDEV_APPROOT}/composer.json)
 
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-          find ${DDEV_APPROOT}/.ddev -type f -exec sed -i '' -e "s|vendor/custom-extension-key|${composer_name}|g" {} +
-        else
-          find ${DDEV_APPROOT}/.ddev -type f -exec sed -i'' -e "s|vendor/custom-extension-key|${composer_name}|g" {} +
-        fi
-      fi
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+      find ${DDEV_APPROOT}/.ddev -type f -exec sed -i '' -e "s|vendor/custom-extension-key|${composer_name}|g" {} +
+    else
+      find ${DDEV_APPROOT}/.ddev -type f -exec sed -i'' -e "s|vendor/custom-extension-key|${composer_name}|g" {} +
     fi
 
   - |

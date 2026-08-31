@@ -34,6 +34,19 @@ setup() {
   export DDEV_NO_INSTRUMENTATION=true
   ddev delete -Oy "${PROJNAME}" >/dev/null 2>&1 || true
   cd "${TESTDIR}"
+
+  # A valid composer.json is a documented prerequisite (README) and, since
+  # the "Check for a valid composer.json" pre-install action, an enforced
+  # one - every test project needs at least this minimal one before
+  # `ddev add-on get` runs. Tests that need a richer composer.json
+  # (require/extension-key) overwrite this via scaffold_with_existing_tests_dir.
+  cat > composer.json <<JSON
+{
+    "name": "test/${PROJNAME}",
+    "type": "typo3-cms-extension"
+}
+JSON
+
   run ddev config --project-name="${PROJNAME}" --project-tld=ddev.site --webserver-type=apache-fpm
   assert_success
   run ddev start -y
