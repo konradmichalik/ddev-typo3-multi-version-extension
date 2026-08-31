@@ -321,6 +321,15 @@ function classic_configuration_set() {
     ' -- "$settings_file" "$1" "$2"
 }
 
+# Creates $1 if it doesn't already exist, with the collation TYPO3 uses for
+# all its own tables - left at the server's charset default, a database can
+# permanently show pending "CHANGE COLUMN" diffs in the backend's Database
+# Analyzer, which no CLI command can fix after the fact (extension:setup only
+# adds columns, never alters them).
+function create_typo3_database() {
+    mysql -h db -u root -proot -e "CREATE DATABASE IF NOT EXISTS $1 CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+}
+
 # Function to perform post-setup tasks for a classic (non-Composer) install.
 # It runs the env-driven TYPO3 setup against the core CLI binary, activates the
 # extensions the classic way (classic mode does NOT auto-activate them),
@@ -329,7 +338,7 @@ function classic_configuration_set() {
 # operate on $TYPO3_BIN and the public/ paths within the same version slot.
 function classic_post_setup() {
   cd "$BASE_PATH/public" || { message red "Failed to change to $BASE_PATH/public"; return 1; }
-  mysql -h db -u root -proot -e "CREATE DATABASE IF NOT EXISTS $DATABASE;"
+  create_typo3_database "$DATABASE"
 
   _progress " ├─ Setup TYPO3 (classic)"
     # env-driven, reuses the existing TYPO3_DB_* / TYPO3_SETUP_* variables.
@@ -890,7 +899,11 @@ function run_fixture_scripts() {
 # It sets up TYPO3 by running the installation setup, configuring TYPO3 settings,
 # and modifying configuration files to enable deprecations and adjust base paths.
 function post_setup_11 {
-  $TYPO3_BIN install:setup -n --database-name $DATABASE
+  # Created explicitly (see create_typo3_database), then handed to
+  # install:setup as existing - left to typo3-console itself this is created
+  # at the server's charset default instead.
+  create_typo3_database "$DATABASE"
+  TYPO3_INSTALL_DB_USE_EXISTING=1 $TYPO3_BIN install:setup -n --database-name $DATABASE
   setup_typo3
   $TYPO3_BIN configuration:set 'GFX/processor_path_lzw' '/usr/bin/'
 
@@ -903,7 +916,9 @@ function post_setup_11 {
 # It sets up TYPO3 by running the installation setup, configuring TYPO3 settings,
 # and modifying configuration files to enable deprecations and adjust base paths.
 function post_setup_12 {
-  $TYPO3_BIN install:setup -n --database-name $DATABASE
+  # See post_setup_11 for why the database is created explicitly here.
+  create_typo3_database "$DATABASE"
+  TYPO3_INSTALL_DB_USE_EXISTING=1 $TYPO3_BIN install:setup -n --database-name $DATABASE
   setup_typo3
 
   sed -i "/'deprecations'/,/^[[:space:]]*'disabled' => true,/s/'disabled' => true,/'disabled' => false,/" /var/www/html/.Build/$VERSION/config/system/settings.php
@@ -915,7 +930,7 @@ function post_setup_12 {
 # It creates the TYPO3 database, sets up TYPO3 by running the installation setup,
 # configures TYPO3 settings, and modifies configuration files to enable deprecations.
 function post_setup_13 {
-  mysql -h db -u root -p"root" -e "CREATE DATABASE $DATABASE;"
+  create_typo3_database "$DATABASE"
   $TYPO3_BIN  setup -n --dbname=$DATABASE --password=$TYPO3_DB_PASSWORD --create-site="https://${VERSION}.${DDEV_SITENAME}.${DDEV_TLD}" --admin-user-password=$TYPO3_SETUP_ADMIN_PASSWORD
   setup_typo3
 
@@ -928,7 +943,7 @@ function post_setup_13 {
 # It creates the TYPO3 database, sets up TYPO3 by running the installation setup,
 # configures TYPO3 settings, and modifies configuration files to enable deprecations.
 function post_setup_14 {
-  mysql -h db -u root -p"root" -e "CREATE DATABASE $DATABASE;"
+  create_typo3_database "$DATABASE"
   $TYPO3_BIN  setup -n --dbname=$DATABASE --password=$TYPO3_DB_PASSWORD --create-site="https://${VERSION}.${DDEV_SITENAME}.${DDEV_TLD}" --admin-user-password=$TYPO3_SETUP_ADMIN_PASSWORD
   setup_typo3
 
