@@ -52,7 +52,7 @@ project_files:
   - .setup/Tests/Acceptance/Fixtures/
   - apache/10.conf
   - apache/20.conf
-  - nginx_full/nginx-site.conf
+  - nginx_full/typo3-versions.conf
   - commands/host/launch
   - commands/host/worktree-init
   - commands/host/worktree-remove
