@@ -131,6 +131,30 @@ JSON
   health_checks
 }
 
+@test "nginx routes backend requests to the version's entry point" {
+  set -eu -o pipefail
+  run ddev config --webserver-type=nginx-fpm
+  assert_success
+  run ddev add-on get "${DIR}"
+  assert_success
+  run ddev restart -y
+  assert_success
+
+  for version in 12 13; do
+    run ddev exec "mkdir -p .Build/${version}/public/typo3 \
+      && echo '<?php echo \"frontend\";' > .Build/${version}/public/index.php \
+      && echo '<?php echo \"backend\";' > .Build/${version}/public/typo3/index.php"
+    assert_success
+  done
+
+  run curl -sf "https://12.${PROJNAME}.ddev.site/typo3/login"
+  assert_output "backend"
+  run curl -sf "https://12.${PROJNAME}.ddev.site/typo3"
+  assert_output "backend"
+  run curl -sf "https://13.${PROJNAME}.ddev.site/typo3/login"
+  assert_output "frontend"
+}
+
 # bats test_tags=release
 @test "install from release" {
   set -eu -o pipefail
