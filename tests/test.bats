@@ -117,6 +117,38 @@ JSON
   health_checks
 }
 
+@test "install all fails when one version fails but still installs the others" {
+  set -eu -o pipefail
+  run ddev add-on get "${DIR}"
+  assert_success
+  run ddev restart -y
+  assert_success
+
+  printf '#!/usr/bin/env bash\nexit 42\n' > .ddev/commands/web/.install-12
+  for version in 13 14; do
+    printf '#!/usr/bin/env bash\necho "installed %s"\n' "${version}" > ".ddev/commands/web/.install-${version}"
+  done
+
+  run ddev install all
+  assert_failure
+  assert_output --partial "installed 14"
+}
+
+@test "all fails when the command fails for one version but still runs it for the others" {
+  set -eu -o pipefail
+  run ddev add-on get "${DIR}"
+  assert_success
+  run ddev restart -y
+  assert_success
+
+  mkdir -p .Build/12 .Build/13 .Build/14
+  touch .Build/13/marker .Build/14/marker
+
+  run ddev all ls marker
+  assert_failure
+  assert_output --partial "[TYPO3 v14"
+}
+
 @test "install from directory on nginx-fpm" {
   set -eu -o pipefail
   run ddev config --webserver-type=nginx-fpm
