@@ -67,6 +67,28 @@ health_checks() {
   assert_output --partial "FULLURL https://${PROJNAME}.ddev.site"
 }
 
+# Version hosts route to .Build/<version>/public, also after a restart
+# (DDEV regenerates its own webserver config on start).
+version_routing_checks() {
+  mkdir -p "${TESTDIR}/.Build/12/public/typo3"
+  echo "T12" > "${TESTDIR}/.Build/12/public/marker.txt"
+  echo '<?php echo "BE12";' > "${TESTDIR}/.Build/12/public/typo3/index.php"
+  run ddev restart -y
+  assert_success
+
+  run curl -sfk "https://12.${PROJNAME}.ddev.site/marker.txt"
+  assert_success
+  assert_output "T12"
+  # TYPO3 12 still serves its backend from public/typo3/index.php
+  run curl -sfk "https://12.${PROJNAME}.ddev.site/typo3/"
+  assert_success
+  assert_output "BE12"
+  # Bare host still serves the intro page
+  run curl -sfk "https://${PROJNAME}.ddev.site/"
+  assert_success
+  refute_output "T12"
+}
+
 teardown() {
   set -eu -o pipefail
   ddev delete -Oy "${PROJNAME}" >/dev/null 2>&1
@@ -115,6 +137,7 @@ JSON
   run ddev restart -y
   assert_success
   health_checks
+  version_routing_checks
 }
 
 @test "install from directory on nginx-fpm" {
@@ -129,6 +152,19 @@ JSON
   run ddev restart -y
   assert_success
   health_checks
+  # 13+ serve the backend from the main index.php, even if typo3/index.php exists
+  mkdir -p "${TESTDIR}/.Build/13/public/typo3"
+  echo '<?php echo "FE13";' > "${TESTDIR}/.Build/13/public/index.php"
+  echo '<?php echo "BE13";' > "${TESTDIR}/.Build/13/public/typo3/index.php"
+  version_routing_checks
+
+  # Backend routes reach typo3/index.php (Apache gets this from TYPO3's .htaccess)
+  run curl -sfk "https://12.${PROJNAME}.ddev.site/typo3/main"
+  assert_success
+  assert_output "BE12"
+  run curl -sfk "https://13.${PROJNAME}.ddev.site/typo3/login"
+  assert_success
+  assert_output "FE13"
 }
 
 # bats test_tags=release
