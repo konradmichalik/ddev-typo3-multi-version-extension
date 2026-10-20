@@ -9,6 +9,7 @@
 
 command=$@
 mapfile -t versions < <(get_supported_typo3_versions)
+failed_versions=()
 
 for version in "${versions[@]}"; do
     TYPO3_PATH="/var/www/html/.Build/${version}"
@@ -46,5 +47,10 @@ for version in "${versions[@]}"; do
     cd "$exec_dir"
     installed_version=$(get_typo3_installed_version "$TYPO3_PATH" "$mode" "$version")
     message magenta "[TYPO3 v${version} (${mode}) - ${installed_version}] ${tempCommand}"
-    $tempCommand
+    $tempCommand || failed_versions+=("$version")
 done
+
+if [ ${#failed_versions[@]} -gt 0 ]; then
+    message red "Command failed for TYPO3 ${failed_versions[*]}."
+    exit 1
+fi

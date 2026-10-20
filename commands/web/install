@@ -48,9 +48,14 @@ fi
 
 if [ "$TYPO3" == "all" ]; then
     mapfile -t versions < <(get_supported_typo3_versions)
+    failed_versions=()
     for version in "${versions[@]}"; do
-        .ddev/commands/web/.install-$version
+        .ddev/commands/web/.install-$version || failed_versions+=("$version")
     done
+    if [ ${#failed_versions[@]} -gt 0 ]; then
+        message red "Installation failed for TYPO3 ${failed_versions[*]}."
+        exit 1
+    fi
 else
     if [ -z "$TYPO3" ]; then
         TYPO3=$(get_lowest_supported_typo3_versions)
