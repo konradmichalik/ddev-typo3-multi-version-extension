@@ -19,8 +19,20 @@ up on the next `ddev add-on get` / `ddev restart` without publishing anything.
 
 ## Tests
 
-Automated tests use [bats-core](https://bats-core.readthedocs.io/), run
-locally from the repository root:
+Automated tests use [bats-core](https://bats-core.readthedocs.io/) and its
+`bats-assert`, `bats-file` and `bats-support` helpers. On macOS, install them
+with Homebrew (the helpers live in the `bats-core` tap):
+
+```shell
+brew install bats-core
+brew tap bats-core/bats-core
+brew install bats-assert bats-file bats-support
+```
+
+Without the helpers, bats aborts in `setup()` and only reports
+`Executed 0 instead of expected N tests`.
+
+Run the suite locally from the repository root:
 
 ```shell
 bats ./tests/test.bats
