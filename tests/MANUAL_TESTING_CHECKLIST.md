@@ -17,7 +17,7 @@ Exploratory coverage against a real extension, complementing `test.bats`. Check 
 ## Webserver types
 
 - [x] apache-fpm project — `typo3-dump-server`, 2026-08-18
-- [x] nginx-fpm project (`nginx_full/nginx-site.conf`, pretty-URL routing through `index.php`, no stray `.htaccess`/`web.config`) — `typo3-dump-server`, 2026-08-18
+- [x] nginx-fpm project (pretty-URL routing through `index.php`, no stray `.htaccess`/`web.config`) — `typo3-dump-server`, 2026-08-18
 - [x] nginx-fpm version routing (`nginx_full/typo3-versions.conf`) survives `ddev restart` — `link-alchemy`, 2026-10-14
 - [x] nginx-fpm backend `/typo3/` and its routes (`/typo3/main`) reachable on TYPO3 12, 13 and 14 — `link-alchemy`, 2026-10-14
 - [x] Apache vhost independent of project name (PR #39): `ServerName ${DDEV_SITENAME}.${DDEV_TLD}` resolves dynamically, not baked in at install time - verified via Host-header test (correct host → 200, unrelated host → 404) — `typo3-dump-server`, 2026-08-18
