@@ -43,6 +43,17 @@ pre_install_actions:
       echo "Removed stale pre-rename .ddev/docker-compose.web.yaml (superseded by docker-compose.typo3-setup.yaml)."
     fi
 
+  - |
+    #ddev-description:Check for an unmarked nginx-site.conf with the old version routing
+    # Older add-on versions shipped the version routing as nginx_full/nginx-site.conf.
+    # Without its #ddev-generated marker DDEV keeps that file, and its server block
+    # loads before typo3-versions.conf and wins, so the /typo3/ routing never applies.
+    # The file was taken over on purpose, so only warn instead of removing it.
+    old_nginx="${DDEV_APPROOT}/.ddev/nginx_full/nginx-site.conf"
+    if [ -f "$old_nginx" ] && grep -q 't3version' "$old_nginx" && ! grep -q '#ddev-generated' "$old_nginx"; then
+      echo "Warning: .ddev/nginx_full/nginx-site.conf overrides the add-on's nginx_full/typo3-versions.conf. Move your own changes to another file in .ddev/nginx_full/, delete nginx-site.conf and run 'ddev restart'."
+    fi
+
 project_files:
   - .setup/scripts/utils.sh
   - .setup/scripts/write-git-info.sh

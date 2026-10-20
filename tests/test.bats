@@ -199,6 +199,17 @@ JSON
   assert_output "FE13"
 }
 
+@test "warns about an unmarked nginx-site.conf with the old version routing" {
+  set -eu -o pipefail
+  mkdir -p .ddev/nginx_full
+  printf 'server {\n    server_name ~^(?<t3version>1[1-4])\\..*$;\n}\n' > .ddev/nginx_full/nginx-site.conf
+
+  run ddev add-on get "${DIR}"
+  assert_success
+  assert_output --partial "nginx_full/nginx-site.conf overrides"
+  assert_file_exist .ddev/nginx_full/nginx-site.conf
+}
+
 # bats test_tags=release
 @test "install from release" {
   set -eu -o pipefail
